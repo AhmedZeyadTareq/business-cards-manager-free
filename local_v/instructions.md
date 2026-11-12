@@ -1,8 +1,8 @@
-# instructions.md — How to build and run the OpenRouter free-model version
+# instructions.md — How to set up, build and run the app
 
-Read `idea.md` first (what and why), then `plan.md` (the source of truth). `tools.md` has the env keys, commands and OpenRouter request formats. This file is the step-by-step.
+Read `idea.md` first (what and why), then `plan.md` (the full specification and the source of truth). `tools.md` has the env keys, commands and OpenRouter request formats. This file is the step-by-step.
 
-OpenRouter screens, limits and free models change. Where this file and <https://openrouter.ai/docs> disagree, the OpenRouter docs win.
+OpenRouter screens, limits and free models change. Where this file and <https://openrouter.ai/docs> disagree, the OpenRouter documentation wins.
 
 ---
 
@@ -10,134 +10,74 @@ OpenRouter screens, limits and free models change. Where this file and <https://
 
 | Thing | Notes |
 |---|---|
-| Node.js 22+ and npm | Same as the live app |
-| Git + a new empty repository | This version lives in its own repository |
+| Node.js 22+ and npm | |
+| Git + an empty repository | |
 | OpenRouter account | Free. No card needed for free models |
-| MongoDB Atlas account (free M0) | Or Docker with Atlas Local, for a fully local test setup |
-| The live `cards` repository | Only for the porting path (§3) |
+| MongoDB Atlas account (free M0 cluster) | Or Docker with Atlas Local, for a fully local test setup |
 
-## 2. One-time accounts setup
+## 2. One-time accounts setup (done by a person)
 
 ### 2.1 OpenRouter
 1. Sign up at <https://openrouter.ai> and create an API key (Keys page). Put it in `.env.local` as `OPENROUTER_API_KEY`. Never commit it or paste it in chat.
-2. Open the **privacy settings** of the account. Free endpoints are only used if the setting that allows free endpoints which may train on or publish prompts is turned on. If it is off, requests to free models fail with "No endpoints found matching your data policy".
+2. Open the account's **privacy settings**. Free endpoints are only used if the setting that allows free endpoints which may train on or publish prompts is turned on. If it is off, requests to free models fail with "No endpoints found matching your data policy".
 3. Decide the privacy question in `idea.md` §7 **before** entering real contacts. Until then use test data only.
 4. Optional: buy $10 of credits once. Free models stay free; the daily cap rises from 50 to 1,000 requests. Never let the balance go negative: free models then fail with 402.
 
 ### 2.2 MongoDB Atlas
-1. Create a free M0 cluster in a region close to the users. Database `cards`.
-2. Create a database user and allow your address (for Vercel: allow all addresses, `0.0.0.0/0`).
+1. Create a free M0 cluster in a region close to the users. The database name is `cards` (created on first use).
+2. Create a database user, and allow your network address (for Vercel: allow all addresses, `0.0.0.0/0`).
 3. Put the connection string in `.env.local` as `MONGODB_URI`.
 
 Fully local alternative: run Atlas Local in Docker (`mongodb/mongodb-atlas-local` image) and point `MONGODB_URI` at it. It includes Atlas Search. Plain MongoDB Community does not.
 
----
-
-## 3. Path A — port from the live repository (recommended)
-
-About 90% of the code is unchanged. Do the steps in order and keep `npm run check` green after each numbered step.
-
-### Step 1 — Copy
-1. Copy the live repository's files (not `.git`, `.next`, `node_modules`, `.env.local`, `local_v/`) into the new repository.
-2. Replace `CLAUDE.md` with `claude.md` from this folder (renamed `CLAUDE.md`). Put `plan.md`, `idea.md`, `instructions.md`, `tools.md` in `docs/`. Delete the old `docs/PLAN.md` and `docs/documentation.md`, or keep them in `docs/original/` for reference.
-3. `npm install`, then `npm run check` — it must be green before any change.
-
-### Step 2 — Config and env
-| File | Change |
-|---|---|
-| `src/lib/config.ts` | Remove `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `CLAUDE_TIMEOUT_MS`. Add the AI keys of `tools.md` §4. Add the free-only check (`refine`): each of `AI_MODEL_TEXT`, `AI_MODEL_VISION` and every fallback is `openrouter/free` or ends in `:free`, unless `AI_ALLOW_PAID` is `true` |
-| `.env.example` | Same keys, no values, one comment line each |
-| `tests/unit/config.test.ts` | New keys; tests for the free-only check |
-| `package.json` | Remove `@anthropic-ai/sdk`; add the `ai:models` script; rename the package |
-
-### Step 3 — The AI module
-Rename `src/modules/claude/` to `src/modules/ai/` and rewrite its files as described in `plan.md` §6 and `tools.md` §5–§7.
-
-| File | Change |
-|---|---|
-| `client.ts` | Rewrite: `chat(body)` with `fetch`, timeout, retries, error mapping. Delete the `FALLBACK` beta |
-| `json.ts` | New: `toProviderSchema`, `parseJsonLoose` |
-| `call-json.ts` | Same exported types and signature (drop `effort`). Body: chat completions messages, `response_format` or prompt mode, loose parse, Zod, one retry |
-| `tool-loop.ts` | Same signature (drop `effort`). Body: OpenAI-style `tools` / `tool_calls` / `role: "tool"`; last round `tool_choice: "none"` |
-| `log.ts` | Keep. `stopReason` holds `finish_reason` |
-
-Mapping from the Anthropic code to OpenRouter:
-
-| Anthropic (live app) | OpenRouter (this version) |
-|---|---|
-| `client.beta.messages.create({ system, messages })` | `POST /chat/completions` with `messages: [{ role: "system" }, …]` |
-| `output_config.format` (`zodOutputFormat`) | `response_format: { type: "json_schema", json_schema: { name, strict, schema } }` |
-| `output_config.effort`, `betas`, `fallbacks` | removed (optional `models: [...]` for fallbacks) |
-| image block `{ type: "image", source: { type: "base64", media_type, data } }` | `{ type: "image_url", image_url: { url: "data:<type>;base64,<data>" } }` |
-| tool `{ name, description, input_schema }` | `{ type: "function", function: { name, description, parameters } }` |
-| `tool_choice: { type: "auto" \| "none" }` | `tool_choice: "auto" \| "none"` |
-| `tool_use` block `{ id, name, input }` (object) | `message.tool_calls[] { id, function: { name, arguments } }` (`arguments` is a JSON **string**) |
-| one user message with `tool_result` blocks, `is_error` | one `{ role: "tool", tool_call_id, content }` message per call; errors are plain text |
-| `stop_reason`: `end_turn`, `tool_use`, `max_tokens`, `refusal` | `finish_reason`: `stop`, `tool_calls`, `length`, `content_filter` |
-| `usage.input_tokens` / `output_tokens` | `usage.prompt_tokens` / `completion_tokens` |
-| `Anthropic.RateLimitError` etc. | HTTP status + `error` body (`tools.md` §7.6) |
-
-### Step 4 — Callers (import paths and wording only)
-| File | Change |
-|---|---|
-| `src/modules/extraction/structure-text.ts`, `extract-photo.ts` | Import from `@/modules/ai/call-json`. Warning text "Claude counted…" → "The AI counted…" |
-| `src/modules/search/ask.ts`, `tools.ts` | Import from `@/modules/ai/tool-loop`. Comments: "Claude" → "the AI" |
-| `src/modules/extraction/prepare-image.ts` | Rename `MAX_BASE64_BYTES` to `MAX_AI_IMAGE_BYTES` and fix its comment: 5 MB was Anthropic's per-image limit. Keep 5 MB to start; lower it if a chosen vision model rejects large images |
-| `src/modules/extraction/prompts/*.ts`, `src/modules/search/prompts/*.ts` | Type import path only. **Do not change prompt text or ids** |
-| `src/modules/contacts/contact.schema.ts` and other comments | "Claude" → "the AI" |
-| API routes for extract and ask | Pass `TOO_MANY_REQUESTS` through `fail()` (it already maps to 429) |
-| Pages: Add from Text, Add from Photo, `SearchBar` | Show the three AI failure messages. New: an **Add manually** button on both Add pages (an empty `ReviewTable` block saved with `source: "manual"`); the live app has no such button |
-
-Check nothing is left: `grep -ri "anthropic\|claude" src scripts tests` should return only intended mentions (none in `src/`).
-
-### Step 5 — Tests and mock server
-| File | Change |
-|---|---|
-| `tests/unit/call-json.test.ts`, `ask-loop.test.ts` | Mock `fetch` instead of the Anthropic client; add the cases of `plan.md` Phase 2 |
-| new `tests/unit/ai-client.test.ts`, `ai-json.test.ts` | Retries, error mapping, schema stripping, loose parsing |
-| `tests/mock-claude/server.mjs` → `tests/mock-ai/server.mjs` | Answer `POST /chat/completions` in chat completions shape (`tools.md` §8) |
-| `tests/unit/extraction-review.test.ts`, `tests/db/access.test.ts` | Update the mocked module path |
-
-### Step 6 — Scripts
-| File | Change |
-|---|---|
-| new `scripts/ai-models.ts` | `GET /models` → table of free models: id, context length, image input, tools, structured outputs. Then check the configured models and print PASS / FAIL per feature |
-| `scripts/ai-smoke.ts` | Unchanged logic; print the model that answered |
-| `scripts/eval-*.ts` | Keep what they do today: the name filter on text and photo, and for search the separate `EVAL_DB` database (default `cards_eval`, emptied on each run) and `--quick-only`. Add: `--limit N`, pause between calls, print configured + answering model, JSON mode, retries, 429s; API failures listed separately |
-
-### Step 7 — Docs and branding
-`README.md`: replace the Anthropic setup with §2.1, the env table and the model selection steps. Decide whether to keep the AUIB name and logos (`idea.md` §7).
-
-### Step 8 — Verify (then follow `plan.md` Phases 3–7 checks)
-1. `npm run check` green.
-2. Mock run: start `node tests/mock-ai/server.mjs`, run the app with `OPENROUTER_BASE_URL=http://127.0.0.1:4010`, and try text, photo and Ask in the browser.
-3. `npm run ai:models`, then `npm run ai:smoke` with the real key.
-4. Model selection (§5), then the evals. Record everything in `plan.md` Progress.
+The free tier has no automatic backups, and deletes in the app are permanent. Move to a paid tier before real contacts arrive.
 
 ---
 
-## 4. Path B — build from zero
+## 3. Building the app
 
-Follow `plan.md` §9 phase by phase. Use the live repository as a reference for behaviour, not as a source to paste from. The order differs from the live app's history on purpose: accounts and the department scope come in Phase 1, so no contacts code is ever written without a scope.
+1. Put the agent instruction file (from `claude.md`) at the repository root and the other four docs in `docs/`.
+2. Build phase by phase, in the order of `plan.md` §11. For each phase:
+   - build only what the phase lists;
+   - pass every **Done when** check and `npm run check`;
+   - update the Progress table in `plan.md`;
+   - commit, report (built / tested / numbers / issues), and wait for approval.
+3. Phases that need a person:
+
+| Phase | What the person does |
+|---|---|
+| 1 | Creates the Atlas cluster and gives `MONGODB_URI` |
+| 2 | Creates the OpenRouter key and checks the privacy setting |
+| 4, 5 | Approves the chosen models, or decides what to do if a target is missed |
+| 7 | Supplies the logo, colours and Team page names, and tries the app on a phone |
+
+4. What can be built and tested with **no key and no database**: everything covered by `npm run check` — cleaning rules, schemas, export, vCard, sessions, passwords, the whole AI module (with mocked `fetch`), the tool loop, eval scoring, CSV import parsing. The mock AI server (`tools.md` §8) lets the pages be tried in a browser without spending free requests; it still needs a database.
+
+### Order of work inside the AI module
+1. `json.ts` and its tests (pure functions).
+2. `client.ts` with mocked `fetch`: success, retries, error mapping.
+3. `call-json.ts`, then `tool-loop.ts`.
+4. The mock server.
+5. Only then a real call: `npm run ai:models`, `npm run ai:smoke`.
 
 ---
 
-## 5. Choosing the models
+## 4. Choosing the models
 
 1. `npm run ai:models`. It needs no key and uses no free requests.
 2. **Text model** (`AI_MODEL_TEXT`): must support `tools`. Prefer one that also lists `structured_outputs`, with a large context and good Arabic.
 3. **Vision model** (`AI_MODEL_VISION`): must list `image` as an input. It needs no tool support. Structured outputs preferred.
 4. For each candidate: set it in `.env.local`, run `npm run ai:smoke`, then `npm run eval:text -- --limit 3` or `npm run eval:photo -- --limit 3`.
 5. If a model rejects `response_format` (HTTP 400 or 404), set `AI_JSON_MODE=prompt` and try again.
-6. Keep the best one per feature, add up to 2 `AI_FALLBACK_MODELS`, run the full evals, write the numbers in Progress.
+6. Keep the best one per feature, add up to 2 `AI_FALLBACK_MODELS`, run the full evals, and write the numbers in `plan.md` Progress.
 
-`openrouter/free` works with no choice at all and is fine for a first run, but it picks a different model from request to request, so eval numbers are not repeatable. Pin real model ids before measuring.
+`openrouter/free` works with no choice at all and is fine for a first run, but it may pick a different model for each request, so eval numbers are not repeatable. Pin real model ids before measuring.
 
-Free models are removed without much notice. If the app starts answering "The AI model is not available", run `npm run ai:models` and pick again.
+Free models are removed without much notice. If the app starts answering "The AI model is not available", run `npm run ai:models` and choose again.
 
 ---
 
-## 6. Running
+## 5. Running
 
 ```bash
 cp .env.example .env.local        # fill in AUTH_SECRET, OPENROUTER_API_KEY, MONGODB_URI
@@ -150,13 +90,26 @@ npm run dev                       # http://127.0.0.1:3000
 
 Make `AUTH_SECRET`: `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
 
-Production on one machine: `npm run build && npm start`.
+Then, in the app: sign in as the admin, add departments and users (Users and Departments pages), and add contacts.
 
-Vercel: import the repository, set every key of `.env.example` in the project settings, pick a region next to the Atlas cluster. Free models are slower than Claude: set the function duration for the extract and ask routes high enough for `AI_TIMEOUT_MS` plus retries (check the limits of your Vercel plan).
+**Sample data:** `npm run db:seed -- --department "High Management" --sample`.
+
+**Production on one machine:** `npm run build && npm start` (still bound to `127.0.0.1`).
+
+**Vercel:** import the repository, set every key of `.env.example` in the project settings, and pick a region next to the Atlas cluster (`vercel.json`). Free models can be slow: make sure the function duration for the extract and ask routes is long enough for `AI_TIMEOUT_MS` plus retries (check the limits of your Vercel plan).
+
+**Phones:** open the HTTPS address and use the browser's "Add to Home Screen" / "Install app". The app needs a connection; it keeps no contacts on the device.
+
+**Importing an existing list:** export it as CSV, then
+```bash
+npm run import:csv -- contacts.csv --department "Name" --dry-run   # shows the column mapping and what would happen
+npm run import:csv -- contacts.csv --department "Name"
+```
+The report is written to `import-reports/`.
 
 ---
 
-## 7. Living with the free allowance
+## 6. Living with the free allowance
 
 | Action | Free requests |
 |---|---|
@@ -171,7 +124,7 @@ Vercel: import the repository, set every key of `.env.example` in the project se
 
 ---
 
-## 8. Troubleshooting
+## 7. Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
@@ -181,13 +134,17 @@ Vercel: import the repository, set every key of `.env.example` in the project se
 | "AI service is busy" often | 20-a-minute cap or a crowded free model | Add `AI_FALLBACK_MODELS`; try another model |
 | 400 on every extraction | Model does not support `response_format`, or `max_tokens` is above its limit | `AI_JSON_MODE=prompt`; lower `AI_MAX_TOKENS` |
 | Photo extraction stops with "Input is too large for one request" | Output cut off at `AI_MAX_TOKENS` | Raise `AI_MAX_TOKENS` if the model allows; fewer cards per photo |
-| `eval:search` fails creating the search index | Atlas M0 allows 3 search indexes and `EVAL_DB` needs one | Delete an unused search index, or use Atlas Local for evals |
-| "The AI returned data in an unexpected format" often | Model too weak for the schema | Another model; a new prompt version with a worked example (`plan.md` §7) |
+| "The AI returned data in an unexpected format" often | Model too weak for the schema | Another model; a new prompt version with a worked example (`plan.md` §9.5) |
 | Ask AI always "did not finish" | Model has no real tool calling, or answers in prose | Pick a model listing `tools`; check the server log for the `finish_reason` |
 | Ask AI finds nothing although quick search does | Tool schema sent as strict, so the model fills every search field | Tool parameters must use `toProviderSchema(schema, { strict: false })` |
 | Photos: wrong card count, mixed-up cards | Too many cards for the model | Fewer cards per photo; another vision model; the per-card upgrade |
 | Photo requests time out | Slow free vision model | Raise `AI_TIMEOUT_MS`; lower the resize edge in `prepare-image.ts` |
-| 402 | Negative credit balance | Top up or fix the balance in OpenRouter |
+| "This photo is too large to upload" | The host's request limit, usually a HEIC the browser could not shrink | Export the photo as JPG |
+| 402 | Negative credit balance | Fix the balance in OpenRouter |
 | Quick search returns nothing | Atlas Search index missing or still building | `npm run db:setup`; wait a minute |
+| `eval:search` fails creating the search index | Atlas M0 allows 3 search indexes and `EVAL_DB` needs one | Delete an unused search index, or use Atlas Local for evals |
+| "Database is not reachable" | Wrong `MONGODB_URI`, or the address is not allowed in Atlas | Check the connection string and Atlas network access |
+| Everyone was signed out | `AUTH_SECRET` changed | Expected; sign in again |
+| "Too many wrong tries" | 5 wrong passwords from this network address | Wait 15 minutes, or an admin resets the password |
 
 Where to look: the server log has one `[ai]` line per call with the prompt id, the model that answered, latency, tokens and the error text. It never contains contact data.
