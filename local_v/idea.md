@@ -1,8 +1,7 @@
 # idea.md — Business Cards Manager, OpenRouter free-model version
 
 ## 1. The idea in one paragraph
-
-The same app as the live **Business Cards Manager** (AUIB): staff add business cards by pasting text or uploading a photo, an AI suggests contacts, a person reviews and saves them, and anyone can find a contact by typing or by asking a question in English or Arabic. The only thing that changes is **who the AI is**: instead of Claude through the Anthropic SDK (paid), this version calls a **free model through the OpenRouter API**. It lives in its own repository.
+staff add business cards by pasting text or uploading a photo, an AI suggests contacts, a person reviews and saves them, and anyone can find a contact by typing or by asking a question in English or Arabic. The only thing that changes is **who the AI is**: instead of Claude through the Anthropic SDK (paid), this version calls a **free model through the OpenRouter API**. It lives in its own repository.
 
 ## 2. Why
 
