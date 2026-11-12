@@ -1,5 +1,7 @@
 # CLAUDE.md — Business Card System (AUIB), OpenRouter free-model version
 
+> In the new repository this file is `CLAUDE.md` at the root. The other files of this folder go in `docs/`.
+
 `docs/plan.md` is the source of truth. If this file and `plan.md` disagree, `plan.md` wins.
 
 ## Agent Role

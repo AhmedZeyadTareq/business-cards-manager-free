@@ -38,8 +38,8 @@ Fully local alternative: run Atlas Local in Docker (`mongodb/mongodb-atlas-local
 About 90% of the code is unchanged. Do the steps in order and keep `npm run check` green after each numbered step.
 
 ### Step 1 — Copy
-1. Copy the live repository's files (not `.git`, `.next`, `node_modules`, `.env.local`, `local_v/`, `CLAUDE.md`, `README.md`) into this repository.
-2. Keep this repository's `CLAUDE.md` and `docs/` (`plan.md`, `idea.md`, `instructions.md`, `tools.md`). Do not bring over the live app's `docs/PLAN.md` and `docs/documentation.md`, or keep them in `docs/original/` for reference.
+1. Copy the live repository's files (not `.git`, `.next`, `node_modules`, `.env.local`, `local_v/`) into the new repository.
+2. Replace `CLAUDE.md` with `claude.md` from this folder (renamed `CLAUDE.md`). Put `plan.md`, `idea.md`, `instructions.md`, `tools.md` in `docs/`. Delete the old `docs/PLAN.md` and `docs/documentation.md`, or keep them in `docs/original/` for reference.
 3. `npm install`, then `npm run check` — it must be green before any change.
 
 ### Step 2 — Config and env

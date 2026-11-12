@@ -1,6 +1,6 @@
 # plan.md — Business Card System, OpenRouter free-model version (Next.js + OpenRouter + MongoDB Atlas)
 
-> This file is the source of truth.
+> In the new repository this file is `docs/plan.md` and is the source of truth.
 > It describes the live Business Cards Manager **as built**, with the AI layer replaced. Background: `idea.md`. Wire formats, env keys and commands: `tools.md`. Setup and porting steps: `instructions.md`.
 
 ## 1. Approach
