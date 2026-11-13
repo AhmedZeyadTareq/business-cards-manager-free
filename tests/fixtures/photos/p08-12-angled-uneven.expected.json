@@ -1,0 +1,122 @@
+[
+  {
+    "FullName": "Mohammed Al-Saadi",
+    "Position": "Marketing Manager",
+    "Mobile": "+9647701234567",
+    "Company": "Asiacell",
+    "City": "Baghdad",
+    "Email": "saadi@asiacell-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 717 0000; Website: www.asiacell-test.com"
+  },
+  {
+    "FullName": "علي حسين الخفاجي",
+    "Position": "مدير فرع",
+    "Mobile": "+9647702345678",
+    "Company": "مصرف الرافدين",
+    "City": "البصرة",
+    "Email": "ali.alkhafaji@rafidain-test.iq",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Address: العشار"
+  },
+  {
+    "FullName": "زينب كاظم / Zainab Kadhim",
+    "Position": "طبيبة أطفال / Pediatrician",
+    "Mobile": "+9647815550142",
+    "Company": "مستشفى الكوفة الأهلي / Al-Kufa Private Hospital",
+    "City": "Najaf",
+    "Email": "dr.zainab@alkufa-hospital-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": ""
+  },
+  {
+    "FullName": "كرار الموسوي",
+    "Position": "منسق مشاريع",
+    "Mobile": "+9647812345678",
+    "Company": "مؤسسة الغدير للرعاية الاجتماعية",
+    "City": "كربلاء",
+    "Email": "karrar@alghadeer-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  },
+  {
+    "FullName": "Anna Schmidt",
+    "Position": "Cultural Attaché",
+    "Mobile": "+9647832221144",
+    "Company": "Embassy of Germany",
+    "City": "Baghdad",
+    "Email": "anna.schmidt@german-embassy-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "سامر البياتي / Samer Al-Bayati",
+    "Position": "مدير المبيعات / Sales Manager",
+    "Mobile": "+9647703451188",
+    "Company": "شركة دجلة للأدوية / Dijlah Pharma Co.",
+    "City": "Baghdad",
+    "Email": "samer@dijlahpharma-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 778 2020; Website: www.dijlahpharma-test.com"
+  },
+  {
+    "FullName": "يوسف الشمري / Yousif Al-Shammari",
+    "Position": "معاون المحافظ / Deputy Governor",
+    "Mobile": "+9647821004455",
+    "Company": "محافظة كربلاء / Karbala Governorate",
+    "City": "Karbala",
+    "Email": "y.alshammari@karbala-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": "Office: 032 331 0020"
+  },
+  {
+    "FullName": "فاطمة العبيدي",
+    "Position": "مستشارة قانونية",
+    "Mobile": "+9647712345678",
+    "Company": "وزارة النفط",
+    "City": "بغداد",
+    "Email": "fatima.alobaidi@oil-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": ""
+  },
+  {
+    "FullName": "Sara Al-Jubouri",
+    "Position": "Branch Manager",
+    "Mobile": "+9647715550199",
+    "Company": "Trade Bank of Iraq",
+    "City": "Baghdad",
+    "Email": "sara.aljubouri@tbi-test.iq",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 543 2100; Address: Al-Mansour"
+  },
+  {
+    "FullName": "Karwan Aziz",
+    "Position": "Sales Director",
+    "Mobile": "+9647504417788",
+    "Company": "Zagros Construction Co.",
+    "City": "Erbil",
+    "Email": "karwan.aziz@zagros-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Website: www.zagros-test.com"
+  },
+  {
+    "FullName": "مريم يعقوب / Mariam Yaqoub",
+    "Position": "مسؤولة برامج / Programme Officer",
+    "Mobile": "+9647833456789",
+    "Company": "برنامج الأمم المتحدة الإنمائي / UNDP Iraq",
+    "City": "Baghdad",
+    "Email": "mariam.yaqoub@undp-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "خالد العزاوي",
+    "Position": "عميد كلية الهندسة",
+    "Mobile": "+9647835556677",
+    "Company": "جامعة بغداد",
+    "City": "بغداد",
+    "Email": "khalid.alazzawi@uobaghdad-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": "Office: 01 778 5500; Address: الجادرية"
+  }
+]

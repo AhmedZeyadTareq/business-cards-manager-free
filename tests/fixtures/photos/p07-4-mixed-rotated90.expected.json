@@ -1,0 +1,42 @@
+[
+  {
+    "FullName": "أحمد الربيعي",
+    "Position": "مدير عام دائرة البعثات",
+    "Mobile": "+9647801112233",
+    "Company": "وزارة التعليم العالي والبحث العلمي",
+    "City": "بغداد",
+    "Email": "a.alrubaie@mohesr-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": "Office: ٠١ ٧١٩ ٤٤٠٠"
+  },
+  {
+    "FullName": "سعد النعيمي / Saad Al-Nuaimi",
+    "Position": "أستاذ مساعد / Assistant Professor",
+    "Mobile": "+9647519876543",
+    "Company": "جامعة الموصل / University of Mosul",
+    "City": "Mosul",
+    "Email": "saad.alnuaimi@uomosul-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": ""
+  },
+  {
+    "FullName": "إيمان الزبيدي / Eman Al-Zubaidi",
+    "Position": "رئيسة الجمعية / President",
+    "Mobile": "+9647734567890",
+    "Company": "جمعية الأمل للمرأة / Al-Amal Women's Association",
+    "City": "Baghdad",
+    "Email": "eman@alamal-women-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  },
+  {
+    "FullName": "Bashar Al-Rawi",
+    "Position": "Lawyer",
+    "Mobile": "+9647901112233 | +9647801119933",
+    "Company": "Al-Rawi Law Office",
+    "City": "Baghdad",
+    "Email": "bashar@alrawi-law-test.com",
+    "Sector": "Professional & Other Contacts",
+    "Notes": "Address: Karrada"
+  }
+]

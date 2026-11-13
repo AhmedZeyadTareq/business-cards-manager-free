@@ -1,0 +1,51 @@
+{
+  "dataset": "tests/fixtures/sample-contacts.json",
+  "ask": [
+    { "question": "Who is the marketing manager at Asiacell?", "expected": "Mohammed Al-Saadi" },
+    { "question": "رقم أحمد الربيعي", "expected": "أحمد الربيعي" },
+    { "question": "doctor in Najaf", "expected": "زينب كاظم" },
+    { "question": "Do we have the number of Khalid Al-Azzawi?", "expected": "خالد العزاوي" },
+    { "question": "من هي سارة الجبوري؟", "expected": "Sara Al-Jubouri" },
+    { "question": "Do we know anyone at a bank in Sulaymaniyah?", "expected": "Dilshad Omer" },
+    { "question": "من هو مدير فرع مصرف الرافدين في البصرة؟", "expected": "علي حسين الخفاجي" },
+    { "question": "Who are our UN contacts in Erbil?", "expected": "Rana Khalil" },
+    { "question": "Which embassy contacts were added this month?", "expected": "Anna Schmidt" },
+    {
+      "question": "Show me the contacts in the NGOs & Civil Society sector in Erbil",
+      "expected": "Soran Rasul"
+    },
+    { "question": "Find the laywer in Bagdad", "expected": "Bashar Al-Rawi" },
+    { "question": "Who is the German cultural attaché?", "expected": "Anna Schmidt" },
+    {
+      "question": "Who is the deputy governor of Karbala?",
+      "expected": "يوسف الشمري / Yousif Al-Shammari"
+    },
+    { "question": "أريد التواصل مع اليونيسف", "expected": "Rana Khalil" },
+    { "question": "Who is our contact at the Ministry of Oil?", "expected": "فاطمة العبيدي" },
+    { "question": "Is there an engineering consultant in Basra?", "expected": "حيدر الأسدي" },
+    { "question": "translator in Sulaymaniyah", "expected": "Tara Najib" },
+    {
+      "question": "Who heads the computer science department at the University of Sulaimani?",
+      "expected": "Shirin Jalal"
+    },
+    { "question": "من هو منسق المشاريع في كربلاء؟", "expected": "كرار الموسوي" },
+    {
+      "question": "Which university contacts do we have in Mosul?",
+      "expected": "سعد النعيمي / Saad Al-Nuaimi"
+    }
+  ],
+  "quick": [
+    { "query": "Moh", "expected": "Mohammed Al-Saadi" },
+    { "query": "Mohamad", "expected": "Mohammed Al-Saadi" },
+    { "query": "احمد", "expected": "أحمد الربيعي" },
+    { "query": "0770 123", "expected": "Mohammed Al-Saadi" },
+    { "query": "٠٧٨٠١١١", "expected": "أحمد الربيعي" },
+    { "query": "saadi@", "expected": "Mohammed Al-Saadi" },
+    { "query": "Noor", "expected": "نور الهاشمي / Noor Al-Hashimi" },
+    { "query": "يوسف الشمري", "expected": "يوسف الشمري / Yousif Al-Shammari" },
+    { "query": "Shirn Jalal", "expected": "Shirin Jalal" },
+    { "query": "فاطمه", "expected": "فاطمة العبيدي" },
+    { "query": "0750 777", "expected": "Soran Rasul" },
+    { "query": "unicef", "expected": "Rana Khalil" }
+  ]
+}

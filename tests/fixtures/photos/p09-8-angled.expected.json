@@ -1,0 +1,82 @@
+[
+  {
+    "FullName": "سامر البياتي / Samer Al-Bayati",
+    "Position": "مدير المبيعات / Sales Manager",
+    "Mobile": "+9647703451188",
+    "Company": "شركة دجلة للأدوية / Dijlah Pharma Co.",
+    "City": "Baghdad",
+    "Email": "samer@dijlahpharma-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 778 2020; Website: www.dijlahpharma-test.com"
+  },
+  {
+    "FullName": "حيدر الأسدي",
+    "Position": "مهندس استشاري",
+    "Mobile": "+9647723456789",
+    "Company": "مكتب الأسدي للاستشارات الهندسية",
+    "City": "البصرة",
+    "Email": "haider@alasadi-eng-test.com",
+    "Sector": "Professional & Other Contacts",
+    "Notes": ""
+  },
+  {
+    "FullName": "Rana Khalil",
+    "Position": "Education Officer",
+    "Mobile": "+9647508881212",
+    "Company": "UNICEF Iraq",
+    "City": "Erbil",
+    "Email": "rkhalil@unicef-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": "Office: +964 66 255 4400"
+  },
+  {
+    "FullName": "عبد الله الجنابي",
+    "Position": "مدير مركز التعليم المستمر",
+    "Mobile": "+9647822223344",
+    "Company": "جامعة الكوفة",
+    "City": "النجف",
+    "Email": "abdullah.aljanabi@uokufa-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": "Website: www.uokufa-test.edu.iq"
+  },
+  {
+    "FullName": "مريم يعقوب / Mariam Yaqoub",
+    "Position": "مسؤولة برامج / Programme Officer",
+    "Mobile": "+9647833456789",
+    "Company": "برنامج الأمم المتحدة الإنمائي / UNDP Iraq",
+    "City": "Baghdad",
+    "Email": "mariam.yaqoub@undp-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "Hassan Al-Tamimi",
+    "Position": "Director of Planning",
+    "Mobile": "+9647901234567",
+    "Company": "Ministry of Planning",
+    "City": "Baghdad",
+    "Email": "h.altamimi@mop-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": ""
+  },
+  {
+    "FullName": "رغد سلمان الطائي",
+    "Position": "مديرة الموارد البشرية",
+    "Mobile": "+9647702233441",
+    "Company": "شركة نفط الشمال",
+    "City": "كركوك",
+    "Email": "raghad.altaie@noc-test.oil.iq",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: 050 225 1100; Fax: 050 225 1101"
+  },
+  {
+    "FullName": "Shirin Jalal",
+    "Position": "Head of Computer Science Department",
+    "Mobile": "+9647728765432",
+    "Company": "University of Sulaimani",
+    "City": "Sulaymaniyah",
+    "Email": "shirin.jalal@univsul-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": "Website: www.univsul-test.edu.iq"
+  }
+]

@@ -67,7 +67,7 @@ export function getClient(): MongoClient {
 }
 
 /** Only `eval:search` switches database (to EVAL_DB). */
-export function useDatabase(name: string): void {
+export function switchDatabase(name: string): void {
   databaseName = name;
 }
 
