@@ -75,7 +75,7 @@ All keys are validated at startup in `src/lib/config.ts` (Zod). Empty strings co
 | `AI_DATA_COLLECTION` | No | `allow` | `deny` = only providers that do not collect prompts (fewer free endpoints) |
 | `AI_ALLOW_PAID` | No | `false` | `true` allows a model id that is not free |
 | `AI_TIMEOUT_MS` | No | `60000` | Timeout of one AI request |
-| `AI_DEADLINE_MS` | No | `120000` | Total time for one user action (all requests, retries and rounds together). Not below `AI_TIMEOUT_MS`. The AI routes' function duration is this plus 20 s, so keep it inside the Vercel plan's limit |
+| `AI_DEADLINE_MS` | No | `120000` | Total time for one user action (all requests, retries and rounds together). Not below `AI_TIMEOUT_MS`, at most `280000`: the AI routes' function duration is a fixed 300 s (`maxDuration`), so keep that inside the Vercel plan's limit |
 | `AI_MAX_TOKENS` | No | `8000` | `max_tokens` of every request (a caller may ask for less, never more). Lower it if a model rejects the request; raise it if 12-card photos stop with `length` |
 | `AI_USER_DAILY_LIMIT` | No | `15` | AI actions one person may start per day (one extraction or one question = 1). `0` = no limit |
 | `APP_TIME_ZONE` | No | `Asia/Baghdad` | IANA time zone for displayed times, date-filter days, "today" in Ask AI and the per-user AI day |

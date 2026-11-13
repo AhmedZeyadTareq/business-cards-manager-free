@@ -111,7 +111,7 @@ Quick search, the table, edit, delete, export and manual add never call the AI.
 | Structured output | `AI_JSON_MODE=schema`: `response_format: { type: "json_schema", strict: true }` from the Zod schema + `provider.require_parameters` + the `response-healing` plugin. `AI_JSON_MODE=prompt`: the schema is written into the prompt. Both: tolerant JSON parsing, then Zod, then one corrective retry |
 | Output size | `AI_MAX_TOKENS` (default 8000) is the `max_tokens` of every request unless the caller asks for less; many free models reject larger values |
 | Retries | `client.ts`: timeout `AI_TIMEOUT_MS` (default 60 s); up to 2 retries on per-minute 429, 408, 5xx and network errors (honours `Retry-After`); never retries the daily-cap 429 |
-| Deadline | Every request, retry and round of one user action shares one deadline, `AI_DEADLINE_MS` (default 120 s). A request never gets more time than is left, and no retry or round starts after it. The three AI routes set their function duration just above the deadline, so Vercel never cuts a request off without a message |
+| Deadline | Every request, retry and round of one user action shares one deadline, `AI_DEADLINE_MS` (default 120 s). A request never gets more time than is left, and no retry or round starts after it. The three AI routes set their function duration (`maxDuration = 300`, a build-time constant) above the largest allowed deadline (`AI_DEADLINE_MS` ≤ 280 s), so Vercel never cuts a request off without a message |
 | Per-user AI limit | `AI_USER_DAILY_LIMIT` (default 15, `0` = off) AI actions per person per day; one extraction or one question = 1. Counted in `ai_usage`, so one person cannot use up the shared free allowance |
 | Time zone | `APP_TIME_ZONE` (default `Asia/Baghdad`): displayed times, the day boundaries of date filters, "today" in Ask AI, and the per-user AI day |
 | Privacy | Test data only until the owner decides. `AI_DATA_COLLECTION` (`allow` / `deny`) is sent as `provider.data_collection`. Prompt and response bodies are never logged |
@@ -194,13 +194,16 @@ src/
       prompts/search.v1.ts
 
     db/                              → mongo.ts (getDb, collections, withDb), setup.ts, search-index.json
-    shared/                          → errors.ts (AppError), api-response.ts (ok / fail / readJson)
+    shared/                          → errors.ts (AppError), api-response.ts (ok / fail / file / readJson), request.ts (queryOf)
 
   components/                        → AppSidebar, SearchBar, Overview, ContactTable, ContactForm,
                                        ContactFields, ReviewTable, Toast, MeProvider, ui/*
   lib/
     config.ts                        → env (Zod), fails fast
     api.ts                           → browser fetch helper for the API routes
+    use-api.ts                       → React hook: load an API path, reload, keep the last data
+    dates.ts                         → days and date formats in the app time zone (server + pages)
+    utils.ts                         → cn() class-name helper
     bilingual.ts                     → splits "English / العربية" for display (either order stored, English line first); avatar initials
     shrink-image.ts                  → shrinks large photos in the browser before upload
     unsaved.ts                       → asks before leaving with unsaved work
@@ -211,7 +214,7 @@ scripts/
   ai-models.ts, ai-smoke.ts
   eval-text.ts, eval-photo.ts, eval-search.ts, eval-score.ts
   make-photo-fixtures.ts             → renders the synthetic card photos + expected JSON
-  seed.ts, import-csv.ts, users-add-admin.ts
+  db-setup.ts, seed.ts, import-csv.ts, users-add-admin.ts
 
 tests/
   mock-ai/server.mjs                 → fake chat completions API (OPENROUTER_BASE_URL)
@@ -418,7 +421,7 @@ Every API response, including the CSV and vCard files, sends `Cache-Control: no-
 |---|---|---|---|
 | `POST /api/auth/login` | — | `{ username, password }` | sets the cookie; `{ signedIn: true }` |
 | `POST /api/auth/logout` | — | — | clears the cookie |
-| `GET /api/me` | signed in | — | `{ user, department, can, departments? }` (`departments` for High Management) |
+| `GET /api/me` | signed in | — | `{ user, department, can, timeZone, departments? }` (`departments` for High Management; `timeZone` = `APP_TIME_ZONE`, used by the pages to show dates) |
 | `POST /api/me/password` | signed in | `{ currentPassword, newPassword }` | new cookie; `{ changed: true }` |
 | `GET /api/search` | signed in | `?q=` (max 200) `&limit=` (1–1000, default 20) | `{ items, total }` |
 | `POST /api/ask` | signed in + 1 AI use | `{ question }` | `{ answer, contacts, rounds }` |
@@ -441,7 +444,7 @@ Every API response, including the CSV and vCard files, sends `Cache-Control: no-
 
 GET routes that read request data call `await connection()` from `next/server` first, so they run at request time.
 
-The three AI routes (`ask`, `extract/text`, `extract/photo`) set their function duration (`maxDuration`; read the Next.js route segment config guide first) to `AI_DEADLINE_MS` plus 20 s. If the Vercel plan allows less, lower `AI_DEADLINE_MS`, never the other way round.
+The three AI routes (`ask`, `extract/text`, `extract/photo`) export `maxDuration = 300`. Next.js reads `maxDuration` at build time, so it cannot be computed from an env value; instead `config.ts` refuses an `AI_DEADLINE_MS` above 280 s, which keeps every allowed deadline at least 20 s inside the function duration. If the Vercel plan allows less than 300 s, lower `maxDuration` in the three routes and keep `AI_DEADLINE_MS` at least 20 s below it.
 
 ---
 
@@ -768,8 +771,8 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0 — Setup | Not started | |
-| 1 — Accounts and data | Not started | |
+| 0 — Setup | Done (13 Nov 2026) | Next.js 16.4.6, React 19.3, Tailwind 4.3, Zod 4.6, mongodb 7.9, Vitest 5. shadcn/ui's registry was not reachable from the build machine, so the few `components/ui/*` primitives are hand-written in the shadcn style (same Tailwind classes, no extra dependency). `maxDuration` must be a build-time constant, so the AI routes use 300 s and `config.ts` caps `AI_DEADLINE_MS` at 280 s (§3, §7). |
+| 1 — Accounts and data | Done (13 Nov 2026) on Atlas Local; **owner still creates the Atlas cluster** | `npm run check` green; `npm run test:db` 35/35 on Atlas Local (Docker). Sign-in, scoped search and the 30 sample contacts checked on a local production build. Quick-search timing: see Phase 6 (`eval:search -- --quick-only`). `GET /api/me` also returns `timeZone`. `scripts/db-setup.ts` is the entry of `npm run db:setup`. The GitHub Actions `test-db` job is written but has not run yet (no push to GitHub Actions from the build machine was checked). |
 | 2 — AI module | Not started | |
 | 3 — Add from Text | Not started | |
 | 4 — Model selection | Not started | Record: date, candidates, JSON mode, eval numbers, chosen models |

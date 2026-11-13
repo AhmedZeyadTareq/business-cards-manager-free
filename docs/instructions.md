@@ -28,7 +28,14 @@ OpenRouter screens, limits and free models change. Where this file and <https://
 2. Create a database user, and allow your network address (for Vercel: allow all addresses, `0.0.0.0/0`).
 3. Put the connection string in `.env.local` as `MONGODB_URI`.
 
-Fully local alternative: run Atlas Local in Docker (`mongodb/mongodb-atlas-local` image) and point `MONGODB_URI` at it. It includes Atlas Search. Plain MongoDB Community does not.
+Fully local alternative: run Atlas Local in Docker and point `MONGODB_URI` at it. It includes Atlas Search. Plain MongoDB Community does not.
+
+```bash
+docker run -d --name atlas -p 27017:27017 mongodb/mongodb-atlas-local:latest
+# .env.local: MONGODB_URI=mongodb://127.0.0.1:27017/?directConnection=true
+```
+
+If `npm run db:setup` waits 4 minutes and then says the search index was not ready, the machine's disk is over about 90% full: Atlas Local then pauses search indexing. Free some space, or give the search data its own memory disk by adding `--tmpfs /data/mongot:rw,size=2g,mode=1777` to the command above.
 
 The free tier has no automatic backups, and deletes in the app are permanent. Move to a paid tier before real contacts arrive.
 
@@ -99,7 +106,7 @@ The local run is for testing only: it is bound to `127.0.0.1`, so no other compu
 
 **Test the production build before a deploy:** `npm run build && npm start` (still bound to `127.0.0.1`).
 
-**Vercel (production):** import the repository, set every key of `.env.example` in the project settings, and pick a region next to the Atlas cluster (`vercel.json`). Free models can be slow. One AI action never runs longer than `AI_DEADLINE_MS` (default 120 s), and the AI routes set their function duration 20 s above it: check that your Vercel plan allows that duration, and lower `AI_DEADLINE_MS` if it does not. Vercel also limits the size of an upload, which is why large photos are shrunk in the browser first.
+**Vercel (production):** import the repository, set every key of `.env.example` in the project settings, and pick a region next to the Atlas cluster (`vercel.json`). Free models can be slow. One AI action never runs longer than `AI_DEADLINE_MS` (default 120 s, at most 280 s), and the AI routes set their function duration to 300 s (`maxDuration` in the three AI route files): check that your Vercel plan allows that duration; if it does not, lower `maxDuration` there and keep `AI_DEADLINE_MS` at least 20 s below it. Vercel also limits the size of an upload, which is why large photos are shrunk in the browser first.
 
 **Phones:** open the HTTPS address and use the browser's "Add to Home Screen" / "Install app". The app needs a connection; it keeps no contacts on the device.
 
