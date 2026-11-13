@@ -196,8 +196,8 @@ src/
     db/                              → mongo.ts (getDb, collections, withDb), setup.ts, search-index.json
     shared/                          → errors.ts (AppError), api-response.ts (ok / fail / file / readJson), request.ts (queryOf)
 
-  components/                        → AppSidebar, SearchBar, Overview, ContactTable, ContactForm,
-                                       ContactFields, ReviewTable, Toast, MeProvider, ui/*
+  components/                        → AppSidebar, SearchBar, Overview, ExploreFilters, ContactTable, ContactForm,
+                                       ContactFields, ReviewTable, Toast, MeProvider, PageHeader, ServiceWorker, ui/*
   lib/
     config.ts                        → env (Zod), fails fast
     api.ts                           → browser fetch helper for the API routes
@@ -212,7 +212,8 @@ public/                              → sw.js, offline.html, icons/
 
 scripts/
   ai-models.ts, ai-smoke.ts
-  eval-text.ts, eval-photo.ts, eval-search.ts, eval-score.ts
+  eval-text.ts, eval-photo.ts, eval-search.ts, eval-score.ts, eval-common.ts
+  make-icons.ts                      → renders the placeholder app icons
   make-photo-fixtures.ts             → renders the synthetic card photos + expected JSON
   db-setup.ts, seed.ts, import-csv.ts, users-add-admin.ts
 
@@ -774,8 +775,8 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
 | 0 — Setup | Done (13 Nov 2026) | Next.js 16.4.6, React 19.3, Tailwind 4.3, Zod 4.6, mongodb 7.9, Vitest 5. shadcn/ui's registry was not reachable from the build machine, so the few `components/ui/*` primitives are hand-written in the shadcn style (same Tailwind classes, no extra dependency). `maxDuration` must be a build-time constant, so the AI routes use 300 s and `config.ts` caps `AI_DEADLINE_MS` at 280 s (§3, §7). |
 | 1 — Accounts and data | Done (13 Nov 2026) on Atlas Local; **owner still creates the Atlas cluster** | `npm run check` green; `npm run test:db` 35/35 on Atlas Local (Docker). Sign-in, scoped search and the 30 sample contacts checked on a local production build. Quick-search timing: see Phase 6 (`eval:search -- --quick-only`). `GET /api/me` also returns `timeZone`. `scripts/db-setup.ts` is the entry of `npm run db:setup`. The GitHub Actions `test-db` job is written but has not run yet (no push to GitHub Actions from the build machine was checked). |
 | 2 — AI module | Code done (13 Nov 2026); **real calls waiting for the OpenRouter key** | 57 unit tests with mocked `fetch` (client, `callJson`, tool loop, JSON helpers) green. Mock AI server works with `ai:smoke`. Not done yet, needs the owner's key and network access to openrouter.ai: `npm run ai:models`, `npm run ai:smoke`, `npm run ai:smoke -- --tools`, and confirming against the live docs: `model` + `models` together, the daily-cap 429 wording (`isDailyLimit` in `client.ts` and its unit test), the `response-healing` plugin id. The attribution header sent is `X-OpenRouter-Title`. `provider.require_parameters` is sent only when the request has `tools` or `response_format`. |
-| 3 — Add from Text | Not started | |
-| 4 — Model selection | Not started | Record: date, candidates, JSON mode, eval numbers, chosen models |
-| 5 — Add from Photo | Not started | |
-| 6 — Explore | Not started | |
-| 7 — Import, admin, PWA, polish | Not started | |
+| 3 — Add from Text | Code done (13 Nov 2026); **`eval:text` numbers waiting for the OpenRouter key** | Prompts v1 are generated from §9 and a unit test checks they still match it. DB tests (mocked AI, real MongoDB) prove: duplicate on re-submit, in-batch duplicate, invalid email blocks the save, daily-cap message with manual add still saving, per-user limit (one person stopped, another not, new day resets). Page checked in a browser against the mock AI server. `AiContact` reads AI output tolerantly (null → "", sector nicknames) while the schema sent to the model stays strict. Not run: `npm run eval:text` on a real model. |
+| 4 — Model selection | **Not started: needs the OpenRouter key** | Nothing could be measured from the build machine (no key, openrouter.ai not reachable). `.env.example` still has the default `openrouter/free`. Record here: date, candidates, JSON mode, eval numbers, chosen models. |
+| 5 — Add from Photo | Code done (13 Nov 2026); **`eval:photo`, real phone photos, HEIC and Vercel checks waiting for the owner** | 10 synthetic photos (1, 4, 8, 12 cards; English, Arabic, bilingual; rotated, angled, uneven light, dark table) rendered with the font in `tests/fixtures/fonts/`. `prepareImage` unit-tested (type from first bytes, EXIF rotation, resize, damaged files). Page checked in a browser against the mock. Not run: `npm run eval:photo`, an 8 MB iPhone HEIC, the 3 real phone photos, the Vercel upload-limit check. |
+| 6 — Explore | Code done (13 Nov 2026); **Ask AI accuracy waiting for the OpenRouter key** | Quick search: **12/12 in the top 3**, slowest median 60 ms (`eval:search -- --quick-only`, Atlas Local, 30 sample contacts). With 12,033 contacts (Atlas Local): table pages 14–24 ms, filters 3 ms, quick search 14–63 ms. DB test: Ask as department A never returns a contact of B, even when the mocked AI names B's ids and passes a `DepartmentId`. Explore page checked in a browser (table, search, dialog, Ask AI through the mock, phone width with no sideways scroll). Not run: the 20 Ask questions on a real model. |
+| 7 — Import, admin, PWA, polish | Code done (13 Nov 2026); **deploy and phone install waiting for the owner** | CSV import: clean report on the sample file (7 imported, 1 empty row and 1 duplicate skipped, 0 failed). Admin pages, My account, Team (placeholder names), manifest, icons (placeholder), service worker and offline page, README. `npm run check` green (137 unit tests); `npm run test:db` green (49 tests). Not done: Vercel deploy, install on a phone, owner's logo / colours / Team names, the 12,000-contact check on the real Atlas M0 cluster. |
