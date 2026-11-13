@@ -127,7 +127,7 @@ Quick search, the table, edit, delete, export and manual add never call the AI.
 
 ```
 .env.example                         → all env keys, no values
-<agent instruction file>             → from claude.md
+CLAUDE.md                            → agent instructions
 docs/                                → plan.md, idea.md, instructions.md, tools.md
 next.config.ts, vercel.json          → vercel.json only sets the region next to the database
 

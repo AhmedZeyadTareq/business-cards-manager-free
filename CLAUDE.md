@@ -1,6 +1,4 @@
-# Agent instructions — Business Cards Manager
-
-Place this file at the root of the repository as the coding agent's instruction file (for example `CLAUDE.md` or `AGENTS.md`). Keep `plan.md`, `idea.md`, `tools.md` and `instructions.md` in `docs/`.
+# CLAUDE.md — Business Cards Manager
 
 `docs/plan.md` is the source of truth. If this file and `plan.md` disagree, `plan.md` wins.
 

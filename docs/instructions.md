@@ -36,7 +36,7 @@ The free tier has no automatic backups, and deletes in the app are permanent. Mo
 
 ## 3. Building the app
 
-1. Put the agent instruction file (from `claude.md`) at the repository root and the other four docs in `docs/`.
+1. The agent instruction file `CLAUDE.md` is at the repository root and the other four docs are in `docs/`.
 2. Build phase by phase, in the order of `plan.md` §11. For each phase:
    - build only what the phase lists;
    - pass every **Done when** check and `npm run check`;

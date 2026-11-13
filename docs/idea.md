@@ -83,4 +83,4 @@ Microsoft or Google sign-in, Telegram or WhatsApp bots, offline use, running a m
 | `plan.md` | The full specification and the build phases. **Source of truth.** |
 | `tools.md` | Env keys, commands, the OpenRouter request formats, the search index, test fixtures |
 | `instructions.md` | Accounts to create, how to run, how to choose models, troubleshooting |
-| `claude.md` | Rules for the coding agent that builds the app |
+| `CLAUDE.md` (repository root) | Rules for the coding agent that builds the app |
