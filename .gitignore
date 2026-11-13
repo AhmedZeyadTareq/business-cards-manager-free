@@ -1,0 +1,25 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# env files: only the example is committed
+.env*
+!.env.example
+
+# generated reports and logs (may contain contact data)
+eval-results/
+import-reports/
+tests/mock-ai/requests.log
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+/coverage
+.vercel
