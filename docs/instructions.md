@@ -94,9 +94,11 @@ Then, in the app: sign in as the admin, add departments and users (Users and Dep
 
 **Sample data:** `npm run db:seed -- --department "High Management" --sample`.
 
-**Production on one machine:** `npm run build && npm start` (still bound to `127.0.0.1`).
+The local run is for testing only: it is bound to `127.0.0.1`, so no other computer or phone can reach it. Staff use the Vercel deployment.
 
-**Vercel:** import the repository, set every key of `.env.example` in the project settings, and pick a region next to the Atlas cluster (`vercel.json`). Free models can be slow: make sure the function duration for the extract and ask routes is long enough for `AI_TIMEOUT_MS` plus retries (check the limits of your Vercel plan).
+**Test the production build before a deploy:** `npm run build && npm start` (still bound to `127.0.0.1`).
+
+**Vercel (production):** import the repository, set every key of `.env.example` in the project settings, and pick a region next to the Atlas cluster (`vercel.json`). Free models can be slow: make sure the function duration for the extract and ask routes is long enough for `AI_TIMEOUT_MS` plus retries (check the limits of your Vercel plan).
 
 **Phones:** open the HTTPS address and use the browser's "Add to Home Screen" / "Install app". The app needs a connection; it keeps no contacts on the device.
 

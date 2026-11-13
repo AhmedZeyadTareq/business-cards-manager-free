@@ -68,7 +68,7 @@ OpenRouter's limits and free model list change. Check <https://openrouter.ai/doc
 | May real contacts be sent to free endpoints? | Yes / no / only to providers that do not collect data | **No**: test data only |
 | Buy $10 of OpenRouter credits once to raise the daily cap to 1,000? | Yes / no | No (50 a day) |
 | Database | MongoDB Atlas free tier in the cloud / Atlas Local in Docker | Atlas free tier |
-| Hosting | One local computer / Vercel | Local first |
+| Hosting | Decided: **Vercel** | Production runs on Vercel. A local clone is only for testing before a deploy |
 | Branding | Organization name, logo, colours, the people on the Team page | App name "Business Cards Manager", crimson theme, placeholder logo |
 
 ## 8. Not in this version

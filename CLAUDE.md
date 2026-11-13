@@ -17,7 +17,7 @@ Staff must add contacts in seconds and find any person or company in seconds.
 
 The AI is a **free model called through the OpenRouter API**. It suggests contacts from pasted text or a photo, and answers search questions. It never saves anything: a person reviews and saves.
 
-Pages: Explore, Add from Text, Add from Photo, Team, My account, and admin pages. Runs locally (127.0.0.1) or on Vercel.
+Pages: Explore, Add from Text, Add from Photo, Team, My account, and admin pages. Production runs on Vercel; a local run (127.0.0.1) is only for testing before a deploy.
 Everyone signs in with their own username and password; each department sees only its own contacts, High Management sees all.
 Installable as a PWA (online only: no contact data is cached on devices).
 
@@ -33,7 +33,7 @@ Before using a Next.js API, read the matching guide in `node_modules/next/dist/d
 
 ## Commands
 - `npm run dev` — dev server on http://127.0.0.1:3000
-- `npm run build && npm start` — production mode, localhost only
+- `npm run build && npm start` — production build on your own machine, localhost only (test before deploy)
 - `npm run check` — lint + typecheck + unit tests (must pass before finishing any phase)
 - `npm run test:db` — DB integration tests (`MONGODB_DB` must contain `test`)
 - `npm run db:setup` — create MongoDB indexes + the Atlas Search index

@@ -98,7 +98,7 @@ Quick search, the table, edit, delete, export and manual add never call the AI.
 | Area | Decision |
 |---|---|
 | Framework | Next.js 16 (App Router), React 19, TypeScript strict |
-| Hosting | One machine bound to `127.0.0.1` (`npm run build && npm start`), or Vercel |
+| Hosting | **Vercel** (production). A local run bound to `127.0.0.1` (`npm run dev`, or `npm run build && npm start`) is only for testing before a deploy; nobody else can reach it |
 | Next.js config | `cacheComponents`, `partialPrefetching`, `experimental.proxyClientMaxBodySize: "25mb"` (with `proxy.ts` active, larger bodies are cut off; keep it above `MAX_IMAGE_MB`); headers on every response: `Content-Security-Policy: frame-ancestors 'none'`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`; `Cache-Control: no-cache` for `/sw.js` |
 | Access | Per-user username + password (scrypt from Node `crypto`, no auth library), signed session cookie keyed by `AUTH_SECRET`. One database: each contact has a server-set `DepartmentId`; every contacts read takes a required scope |
 | Code style | Modules + plain exported functions. No classes, no agent framework |
@@ -729,7 +729,7 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
 4. Loading, empty and error states on every page; unsaved-work guards; toasts; the three AI messages of §2.8.
 5. `README.md`: setup from zero, OpenRouter key and privacy setting, choosing models, env, scripts, troubleshooting.
 
-**Done when:** the CSV import gives a clean report on the sample file; all targets hold at 12,000 contacts; the README runs the project from a fresh clone with only an OpenRouter key and a MongoDB URI; sign-in works with two accounts in different departments, each seeing only its own contacts; the app installs on a phone over HTTPS.
+**Done when:** the CSV import gives a clean report on the sample file; all targets hold at 12,000 contacts; the README runs the project from a fresh clone with only an OpenRouter key and a MongoDB URI; sign-in works with two accounts in different departments, each seeing only its own contacts; the app is deployed on Vercel, Add from Text, Add from Photo and Ask AI work there, and it installs on a phone over HTTPS.
 
 ---
 

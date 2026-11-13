@@ -13,7 +13,7 @@ OpenRouter details were checked against its documentation in November 2026. Limi
 | **OpenRouter** (<https://openrouter.ai>) | All AI calls (text, photo, Ask AI) | Free models: $0. An optional one-time $10 of credits raises the daily free cap from 50 to 1,000 requests | API key (`OPENROUTER_API_KEY`) |
 | **MongoDB Atlas** free tier (M0) | Contacts, users, departments, activity log, Atlas Search | Free | Connection string (`MONGODB_URI`) |
 | MongoDB **Atlas Local** (Docker) | Tests and fully local runs (it includes Atlas Search) | Free | Docker |
-| **Vercel** (optional) | Hosting | Free tier | Account; env values set in the project |
+| **Vercel** | Production hosting (a local run is only for testing before a deploy) | Free tier | Account; env values set in the project |
 | **GitHub** | Repository + Actions running `npm run check` | Free | — |
 
 Plain MongoDB Community does not work: quick search and Ask AI need **Atlas Search** (`$search`), which only Atlas and Atlas Local provide.
@@ -39,7 +39,7 @@ Scripts run with `node --env-file-if-exists=.env.local --import tsx <file>`.
 | Command | What it does | Free AI requests used |
 |---|---|---|
 | `npm run dev` | Dev server on `http://127.0.0.1:3000` | — |
-| `npm run build && npm start` | Production mode, localhost only | — |
+| `npm run build && npm start` | Production build on your own machine, localhost only (a test before deploying) | — |
 | `npm run check` | `lint` + `typecheck` + unit tests | 0 (mocked) |
 | `npm run test:db` | DB tests (`MONGODB_DB` must contain `test`) | 0 |
 | `npm run db:setup` | Indexes + Atlas Search index | 0 |
