@@ -31,7 +31,7 @@ All pages except Login sit inside one layout with a sidebar.
 - Theme: primary crimson `#AC103D`, grey `#808285`, white background; fonts IBM Plex Sans + IBM Plex Sans Arabic. Logo and icons are placeholders until the owner supplies them.
 - UI labels are English only. Contact values may be Arabic: value cells and inputs use `dir="auto"`.
 - Touch targets are at least 44 px. Lists never scroll sideways.
-- One date format everywhere: `2 Nov 2026`, with time as `14:05` (24-hour, viewer's time zone).
+- One date format everywhere: `2 Nov 2026`, with time as `14:05` (24-hour, in the app time zone `APP_TIME_ZONE`, default `Asia/Baghdad`). The same zone decides what "today" and "this month" mean in the date filters, the overview, Ask AI and the per-user AI limit.
 - A short toast confirms saves and deletes.
 
 ### 2.2 Login — `/login`
@@ -46,12 +46,12 @@ From top to bottom:
    - under 52rem: one card per contact, with a **Sort by** select;
    - 52–68rem: table without City and Added (City shows under Company);
    - 68rem and up: full table — Name (with initials avatar), Position, Company, City, Mobile, Email, Sector, Added.
-   - Every mobile and email shows on its own line. A stored `English / العربية` value shows on one line per language, English first (display only). High Management sees the department name under the sector. Phones and emails are plain text, not links.
+   - Every mobile and email shows on its own line. A stored `English / العربية` value shows on one line per language, English first (display only; the prompts store bilingual values Arabic first, and both orders are handled). High Management sees the department name under the sector. Phones and emails are plain text, not links.
 5. Clicking a row opens the **contact dialog**: the 8 fields, **Save changes**, **Reset**, **Delete** (asks "Delete this contact?"), **Add to phone contacts** (downloads a `.vcf`), added and updated date and time. Viewers get it read-only ("View only"). Closing with unsaved edits asks first. On short screens the header and buttons stay in view and the fields scroll.
 
 **Search behaviour**
 - Typing 2+ characters runs **quick search** after a 150 ms pause. The list shows the matches, "Showing 20 of 65 results", and **Show more** (20 more each time, up to 1,000).
-- **Enter**: opens the first match; if there are no matches, asks the AI. If Enter is pressed before the search returns, it acts when the result arrives.
+- **Enter**: opens the first match. If Enter is pressed before the search returns, it acts when the result arrives. With no matches the list says "No matches. Try Ask AI." and nothing is sent: only the **Ask AI** button spends AI requests.
 - **Ask AI** button: always asks the AI. The answer shows in a box above the matching contacts. Empty result: "The AI found no matching contacts."
 - A search covers all contacts in the person's scope and ignores the table filters. If filters are set, a notice names them, says they do not apply, and offers **Back to filtered table**.
 - **Export follows the screen:** table → "Export CSV" or "Export CSV (filtered)" (all matching contacts, not only the page); quick search → "Export N results" (every match, even beyond 1,000); Ask AI → "Export N results" (only the listed contacts). Disabled at 0 results.
@@ -61,7 +61,7 @@ Textarea + **Structure with AI** ("Structuring…" while loading) + **Add manual
 
 ### 2.5 Add from Photo — `/add/photo`
 - **Choose photo** (JPG, PNG, WEBP, HEIC) and, on touch devices, **Take photo** (camera). A preview shows when the browser can display the file.
-- Photos over 4 MB are shrunk in the browser first (long edge 2000 px, JPEG quality 0.9 → 0.8 → 0.65) to fit a host's upload limit. If the browser cannot read the file (HEIC outside Safari), the original is sent.
+- Photos over 4 MB are shrunk in the browser first (long edge 2000 px, JPEG quality 0.9 → 0.8 → 0.65) to fit a host's upload limit. If the browser cannot read the file (HEIC outside Safari), the original is sent. If the host rejects the upload (HTTP 413), the page says "This photo is too large to upload. Export it as JPG and try again."
 - **Extract contacts** ("Reading cards…", with the note "Many cards can take up to a minute."). Then: "N cards found", a warning if the AI counted a different number than it read, and the review list. **Add manually** is also here.
 - Choosing a new photo or extracting again asks first if contacts are still under review.
 
@@ -88,6 +88,8 @@ The AI routes return a user-safe message, which the page shows as is:
 | Too many requests right now | AI service is busy. Try again in a minute. |
 | Daily free allowance used up | Today's free AI allowance is used up. Quick search and manual add still work. |
 | Model removed or blocked by settings | The AI model is not available. Tell an administrator. |
+| The person's own daily AI limit is reached | You have used your AI allowance for today. Quick search and manual add still work. |
+| The action's deadline passed | AI service timed out. Try again. |
 
 Quick search, the table, edit, delete, export and manual add never call the AI.
 
@@ -99,16 +101,19 @@ Quick search, the table, edit, delete, export and manual add never call the AI.
 |---|---|
 | Framework | Next.js 16 (App Router), React 19, TypeScript strict |
 | Hosting | **Vercel** (production). A local run bound to `127.0.0.1` (`npm run dev`, or `npm run build && npm start`) is only for testing before a deploy; nobody else can reach it |
-| Next.js config | `cacheComponents`, `partialPrefetching`, `experimental.proxyClientMaxBodySize: "25mb"` (with `proxy.ts` active, larger bodies are cut off; keep it above `MAX_IMAGE_MB`); headers on every response: `Content-Security-Policy: frame-ancestors 'none'`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`; `Cache-Control: no-cache` for `/sw.js` |
+| Next.js config | `cacheComponents`, `partialPrefetching`, `experimental.proxyClientMaxBodySize: "25mb"` (with `proxy.ts` active, larger bodies are cut off; `MAX_IMAGE_MB` cannot be set above 20, so an allowed photo always fits); headers on every response: `Content-Security-Policy: frame-ancestors 'none'`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`; `Cache-Control: no-cache` for `/sw.js` |
 | Access | Per-user username + password (scrypt from Node `crypto`, no auth library), signed session cookie keyed by `AUTH_SECRET`. One database: each contact has a server-set `DepartmentId`; every contacts read takes a required scope |
 | Code style | Modules + plain exported functions. No classes, no agent framework |
 | UI | Tailwind 4 + shadcn/ui, `lucide-react` icons |
 | AI provider | **OpenRouter** chat completions API (`POST /api/v1/chat/completions`, OpenAI-compatible JSON), called with built-in `fetch` from `modules/ai/client.ts`. No SDK |
-| Models | Env only: `AI_MODEL_TEXT` (text + Ask AI; must support tool calling) and `AI_MODEL_VISION` (photos; must accept images). Default `openrouter/free` (OpenRouter picks a free model). Pin specific `:free` models once the evals have chosen them. Optional `AI_FALLBACK_MODELS` |
+| Models | Env only: `AI_MODEL_TEXT` (text + Ask AI; must support tool calling) and `AI_MODEL_VISION` (photos; must accept images). Default `openrouter/free` (OpenRouter picks a free model). Pin specific `:free` models once the evals have chosen them. Optional fallbacks per feature: `AI_FALLBACK_MODELS_TEXT` (each must support tool calling) and `AI_FALLBACK_MODELS_VISION` (each must accept images) |
 | Free only | `config.ts` rejects a model id that is not `openrouter/free` and does not end in `:free`, unless `AI_ALLOW_PAID=true` |
 | Structured output | `AI_JSON_MODE=schema`: `response_format: { type: "json_schema", strict: true }` from the Zod schema + `provider.require_parameters` + the `response-healing` plugin. `AI_JSON_MODE=prompt`: the schema is written into the prompt. Both: tolerant JSON parsing, then Zod, then one corrective retry |
-| Output size | `AI_MAX_TOKENS` (default 8000) caps `max_tokens` on every request; many free models reject larger values |
-| Retries | `client.ts`: timeout `AI_TIMEOUT_MS`; up to 2 retries on per-minute 429, 408, 5xx and network errors (honours `Retry-After`); never retries the daily-cap 429 |
+| Output size | `AI_MAX_TOKENS` (default 8000) is the `max_tokens` of every request unless the caller asks for less; many free models reject larger values |
+| Retries | `client.ts`: timeout `AI_TIMEOUT_MS` (default 60 s); up to 2 retries on per-minute 429, 408, 5xx and network errors (honours `Retry-After`); never retries the daily-cap 429 |
+| Deadline | Every request, retry and round of one user action shares one deadline, `AI_DEADLINE_MS` (default 120 s). A request never gets more time than is left, and no retry or round starts after it. The three AI routes set their function duration just above the deadline, so Vercel never cuts a request off without a message |
+| Per-user AI limit | `AI_USER_DAILY_LIMIT` (default 15, `0` = off) AI actions per person per day; one extraction or one question = 1. Counted in `ai_usage`, so one person cannot use up the shared free allowance |
+| Time zone | `APP_TIME_ZONE` (default `Asia/Baghdad`): displayed times, the day boundaries of date filters, "today" in Ask AI, and the per-user AI day |
 | Privacy | Test data only until the owner decides. `AI_DATA_COLLECTION` (`allow` / `deny`) is sent as `provider.data_collection`. Prompt and response bodies are never logged |
 | Database | MongoDB Atlas free tier (M0), database `cards`. Atlas Local (Docker) for tests. Plain MongoDB Community cannot be used: search needs Atlas Search |
 | Driver | Official `mongodb` driver, no ORM. One cached `MongoClient` on `globalThis` (safe for dev hot reload) |
@@ -118,7 +123,7 @@ Quick search, the table, edit, delete, export and manual add never call the AI.
 | Validation | Zod v4: one contact schema for AI output, API input and DB writes; `z.toJSONSchema()` for output and tool schemas |
 | Writes | The AI never writes to the DB. Saving happens only via `POST /api/contacts` after user review |
 | Errors | `AppError` with a code and a user-safe message. Unknown errors are logged and answered with "Something went wrong" |
-| Quality | ESLint + Prettier + `tsc --noEmit` + Vitest: `npm run check`. GitHub Actions runs it on every push and pull request |
+| Quality | ESLint + Prettier + `tsc --noEmit` + Vitest: `npm run check`. GitHub Actions runs it, and `npm run test:db` against an Atlas Local service container, on every push and pull request |
 | Version control | Git; one commit per approved phase |
 
 ---
@@ -146,7 +151,7 @@ src/
 
   modules/
     ai/                              → THE ONLY CODE THAT CALLS OPENROUTER
-      client.ts                      → chat(body): fetch, auth, fallbacks, timeout, retries, error mapping
+      client.ts                      → chat(body, deadline): fetch, auth, fallbacks, timeout, deadline, retries, error mapping
       call-json.ts                   → callJson({ prompt, input, schema, image?, maxTokens? })
       tool-loop.ts                   → runToolLoop(): bounded tool loop used by search/ask
       json.ts                        → toProviderSchema(schema, { strict }), parseJsonLoose(text)
@@ -160,6 +165,7 @@ src/
       departments.repo.ts            → listDepartments, createDepartment, updateDepartment, ensureHighManagement
       login.ts                       → signIn (with lockout), changePassword
       login-attempts.ts              → failed sign-ins per username + network address
+      ai-usage.ts                    → spendAiUse(userId): the per-user daily AI limit
       password.ts, session.ts        → scrypt hashes · signed session tokens (no DB, used by proxy.ts)
 
     audit/audit.repo.ts              → writeAudit, listAudit
@@ -168,7 +174,7 @@ src/
       contact.schema.ts              → FIELDS, SECTORS, SOURCES, ContactInput, Contact — single source of truth
       contacts.repo.ts               → listContacts, listAllContacts, quickSearch, searchContacts, getContact,
                                        getContactsByIds, insertContacts, updateContact, deleteContact,
-                                       listValues, listCreators, findDuplicates
+                                       listValues, listCreators, findDuplicates, deleteAllContacts
       normalize.ts                   → normalizeMobile, unusualMobiles, normalizeEmail, invalidEmails,
                                        normalizeDigits, normalizeText, foldArabic, normalizeSector,
                                        cleanContact, cleanForReview, toMatchKeys
@@ -195,7 +201,7 @@ src/
   lib/
     config.ts                        → env (Zod), fails fast
     api.ts                           → browser fetch helper for the API routes
-    bilingual.ts                     → splits "English / العربية" for display; avatar initials
+    bilingual.ts                     → splits "English / العربية" for display (either order stored, English line first); avatar initials
     shrink-image.ts                  → shrinks large photos in the browser before upload
     unsaved.ts                       → asks before leaving with unsaved work
 
@@ -211,7 +217,7 @@ tests/
   mock-ai/server.mjs                 → fake chat completions API (OPENROUTER_BASE_URL)
   unit/                              → mocked fetch; no network, no database
   db/                                → integration tests (`npm run test:db`, not part of `check`)
-  fixtures/                          → sample-contacts.json, text/, photos/, search/questions.json, import/
+  fixtures/                          → sample-contacts.json, text/, photos/, search/questions.json, import/, fonts/
 ```
 
 **Rules**
@@ -269,7 +275,7 @@ tests/
 
 **Digits** (`normalizeDigits`): Arabic-Indic `٠-٩` and Persian `۰-۹` → `0-9`.
 
-**Comparing and searching only** (`foldArabic`): normalized text with harakat and tatweel removed, `أ إ آ ٱ` → `ا`, `ة` → `ه`, `ى` → `ي`, lowercase. Never stored.
+**Comparing and searching only** (`foldArabic`): normalized text with harakat and tatweel removed, `أ إ آ ٱ` → `ا`, `ة` → `ه`, `ى` → `ي`, the Persian / Kurdish letter forms `ی` (U+06CC) → Arabic yeh and `ک` (U+06A9) → Arabic kaf, lowercase. Never stored. The search index mapping (`tools.md` §9) must fold the same letters.
 
 **Mobile** (`normalizeMobile`)
 1. Convert digits, remove invisible marks.
@@ -306,12 +312,13 @@ A number is never merged with another, trimmed, or given a guessed country code.
 | `departments` | `{ _id, name, isHighManagement, active, createdAt }`. Exactly one has `isHighManagement: true`, named "High Management" |
 | `users` | `{ _id, username, name, passwordHash, departmentId, role, active, sessionVersion, createdAt, updatedAt }` |
 | `login_attempts` | `{ _id: "username\|address", username, count, expiresAt }` |
+| `ai_usage` | `{ _id: "userId\|YYYY-MM-DD", count, expiresAt }` (the day in the app time zone) |
 | `audit_log` | `{ _id, at, userId, username, action, contactId?, contactName?, departmentId?, before?, count?, detail? }`; `action` = `create`, `update`, `delete`, `export` |
 
 ### 5.4 Indexes (`db/setup.ts`, safe to re-run)
 - `contacts`: `City`, `Sector`, `Company`, `CreatedAt: -1`, `{ DepartmentId: 1, CreatedAt: -1 }`, `_emails`, `_mobiles`.
 - `departments`: unique `name` with collation `{ locale: "en", strength: 2 }` (case-insensitive).
-- `users`: unique `username`. `audit_log`: `at: -1`. `login_attempts`: TTL on `expiresAt` (`expireAfterSeconds: 0`).
+- `users`: unique `username`. `audit_log`: `at: -1`. `login_attempts` and `ai_usage`: TTL on `expiresAt` (`expireAfterSeconds: 0`).
 - Atlas Search index `contacts_search` on `contacts` (definition in `tools.md` §9): create it, or update it if it exists, then wait until it is `READY` and queryable (poll every 2 s, up to 4 minutes).
 
 ---
@@ -337,6 +344,7 @@ type Writer = { scope: Scope; departmentId: ObjectId; actor: Actor };
 type Access = Writer & { user: User; department: { id, name, isHighManagement }; can: Permissions };
 ```
 - `requireAccess(need?)` is called first in every API route. It reads the session cookie, loads the user and department **from the database on every request**, and throws `UNAUTHORIZED` ("Please sign in.") or `FORBIDDEN` ("Only administrators can do this." / "Your role can only view contacts. Ask an administrator to change it.").
+- `requireAccess(need, { ai: true })` is used by the three AI routes. After the access checks it calls `spendAiUse`: it adds 1 to the person's count for today and throws `TOO_MANY_REQUESTS` ("You have used your AI allowance for today. Quick search and manual add still work.") once the count is above `AI_USER_DAILY_LIMIT`. The use is counted even if the AI call then fails. Scripts and evals are not limited.
 - `scriptWriter(departmentId, name)` is the `Writer` for scripts: actor `{ userId: null, username: "script:<name>" }`.
 
 ### 6.3 Passwords and sessions
@@ -352,7 +360,7 @@ type Access = Writer & { user: User; department: { id, name, isHighManagement };
 ### 6.4 Sign-in rules (`login.ts`, `login-attempts.ts`)
 - Unknown username and wrong password get the same answer: "Wrong username or password." An inactive account or department: "This account is not active. Ask an administrator for access."
 - 5 wrong passwords for one username **from one network address** lock that address out of that username for 15 minutes (`TOO_MANY_REQUESTS`: "Too many wrong tries. Wait 15 minutes, or ask an administrator to reset your password."). The real person, on another address, can still sign in.
-- Address = `x-real-ip`, else the first `x-forwarded-for` entry, else `"local"`.
+- Address = `x-real-ip`, else the first `x-forwarded-for` entry, else `"local"`. Vercel sets these headers itself, so they can be trusted there. Behind any other proxy, the proxy must overwrite them, or the lockout can be bypassed.
 - A successful sign-in clears that address's count. An admin password reset clears every lock on the username.
 
 ### 6.5 Admin rules
@@ -404,6 +412,8 @@ Every response is `{ ok: true, data }` or `{ ok: false, error: { code, message, 
 
 `fail(error)`: `AppError` → its code and message; `ZodError` → `VALIDATION` "Invalid input" with the issues in `details`; anything else → logged, `INTERNAL` "Something went wrong". Malformed JSON bodies → `VALIDATION`. Database driver errors → `DB_FAILED` "Database is not reachable. Try again in a moment."
 
+Every API response, including the CSV and vCard files, sends `Cache-Control: no-store`, so no contact data stays in a browser cache.
+
 | Route | Needs | Input | Returns |
 |---|---|---|---|
 | `POST /api/auth/login` | — | `{ username, password }` | sets the cookie; `{ signedIn: true }` |
@@ -411,9 +421,9 @@ Every response is `{ ok: true, data }` or `{ ok: false, error: { code, message, 
 | `GET /api/me` | signed in | — | `{ user, department, can, departments? }` (`departments` for High Management) |
 | `POST /api/me/password` | signed in | `{ currentPassword, newPassword }` | new cookie; `{ changed: true }` |
 | `GET /api/search` | signed in | `?q=` (max 200) `&limit=` (1–1000, default 20) | `{ items, total }` |
-| `POST /api/ask` | signed in | `{ question }` | `{ answer, contacts, rounds }` |
-| `POST /api/extract/text` | `add` | `{ text }` | `{ contacts: ReviewContact[] }` |
-| `POST /api/extract/photo` | `add` | multipart, field `image` | `{ cardCount, contacts, warning? }` |
+| `POST /api/ask` | signed in + 1 AI use | `{ question }` | `{ answer, contacts, rounds }` |
+| `POST /api/extract/text` | `add` + 1 AI use | `{ text }` | `{ contacts: ReviewContact[] }` |
+| `POST /api/extract/photo` | `add` + 1 AI use | multipart, field `image` | `{ cardCount, contacts, warning? }` |
 | `GET /api/contacts` | signed in | `page`, `pageSize` (≤100, default 25), `sort` (a field, `CreatedAt` or `UpdatedAt`), `dir`, `Company`, `City`, `Sector`, `DepartmentId`, `CreatedBy`, `dateFrom`, `dateTo` | `{ items, total }` |
 | `POST /api/contacts` | `add` | `{ source, contacts[] }` | saved contacts, status 201 |
 | `GET /api/contacts/:id` | signed in | — | contact |
@@ -431,14 +441,16 @@ Every response is `{ ok: true, data }` or `{ ok: false, error: { code, message, 
 
 GET routes that read request data call `await connection()` from `next/server` first, so they run at request time.
 
+The three AI routes (`ask`, `extract/text`, `extract/photo`) set their function duration (`maxDuration`; read the Next.js route segment config guide first) to `AI_DEADLINE_MS` plus 20 s. If the Vercel plan allows less, lower `AI_DEADLINE_MS`, never the other way round.
+
 ---
 
 ## 8. Module Functions
 
-### 8.1 `ai/client.ts` — `chat(body)`
-1. Build the request: model (or `models` when fallbacks are set), `provider { require_parameters, data_collection }`, the caller's `messages`, `tools`, `response_format`, and `max_tokens` = the caller's value, never above `AI_MAX_TOKENS`.
-2. `fetch` with `AbortSignal.timeout(AI_TIMEOUT_MS)`.
-3. Retry up to 2 times on per-minute 429, 408, 5xx and network errors. Wait `Retry-After` if present, else 2 s then 5 s.
+### 8.1 `ai/client.ts` — `chat(body, deadline)`
+1. Build the request: `model`, plus `models` when fallbacks are set for this kind of request (the same model first, then `AI_FALLBACK_MODELS_VISION` if a message has an image, else `AI_FALLBACK_MODELS_TEXT`), `provider { require_parameters, data_collection }`, the caller's `messages`, `tools`, `response_format`, and `max_tokens` = `AI_MAX_TOKENS`, or the caller's value when it is lower.
+2. `fetch` with a timeout of `AI_TIMEOUT_MS` or the time left before `deadline`, whichever is smaller. `callJson` and `runToolLoop` each create one deadline (`AI_DEADLINE_MS` after they start) and pass it to every `chat()` call they make. Once it has passed, nothing new starts: `AI_FAILED` "AI service timed out. Try again."
+3. Retry up to 2 times on per-minute 429, 408, 5xx and network errors. Wait `Retry-After` if present, else 2 s then 5 s. If the wait would end after the deadline, do not retry.
 4. A body containing `error` is a failure even with HTTP 200.
 5. Map failures to `AppError` with a safe message (`tools.md` §7.6): `TOO_MANY_REQUESTS` for 429, otherwise `AI_FAILED`. Log the raw error on the server only.
 6. Return `{ message, finishReason, model, usage }`.
@@ -447,7 +459,7 @@ GET routes that read request data call `await connection()` from `next/server` f
 1. Model: `AI_MODEL_VISION` if `image`, else `AI_MODEL_TEXT`.
 2. Messages: system = prompt text (+ the schema instruction in `prompt` mode); user = the text, plus an `image_url` data URL part when there is an image.
 3. `schema` mode: `response_format` from `toProviderSchema(schema, { strict: true })`, plus the `response-healing` plugin.
-4. `chat()`. `finish_reason: "length"` → `AI_FAILED` "Input is too large for one request. Try fewer items at a time." `content_filter` → `AI_FAILED` "The AI declined to process this input." Neither is retried.
+4. `chat()`. `finish_reason: "length"` with some content → `AI_FAILED` "Input is too large for one request. Try fewer items at a time." `length` with **empty** content (a reasoning model spent every token thinking) → `AI_FAILED` "The AI ran out of room before answering. Tell an administrator." `content_filter` → `AI_FAILED` "The AI declined to process this input." Neither is retried.
 5. `parseJsonLoose(content)` → Zod.
 6. On invalid JSON or a Zod failure: retry **once** — append the assistant turn and a user message listing the problems ("Your previous output failed validation: … Return the complete corrected JSON."). Still invalid → `AI_FAILED` "The AI returned data in an unexpected format. Please try again."
 7. Log each call.
@@ -469,23 +481,23 @@ Round = one `chat()` call.
 
 ### 8.5 `extraction/`
 - `structureText(departmentId, text)`: empty → `VALIDATION` "Paste some text first."; longer than `MAX_TEXT_CHARS` → `PAYLOAD_TOO_LARGE`; `callJson` with the structure-text prompt, input `<text>\n…\n</text>`, schema `{ contacts: ContactInput[] }`; `cleanForReview` each; drop contacts whose 8 fields are all empty; `findDuplicates`; return `{ contacts }`.
-- `extractPhoto(departmentId, file)`: empty file → `VALIDATION`; larger than `MAX_IMAGE_MB` → `PAYLOAD_TOO_LARGE`; `prepareImage` (unknown type → `UNSUPPORTED_MEDIA` "Unsupported image. Use JPG, PNG, WEBP or HEIC."); `callJson` with the image, input "Extract every business card in this photo.", schema `{ cardCount: int 0–50, contacts: ContactInput[] }`, `maxTokens` 24,000 (capped by `AI_MAX_TOKENS`); if `cardCount !== contacts.length` add `warning` "The AI counted N cards but read M. Check the photo for missed cards."; `cleanForReview` each; `findDuplicates`; return `{ cardCount, contacts, warning? }`.
+- `extractPhoto(departmentId, file)`: empty file → `VALIDATION`; larger than `MAX_IMAGE_MB` → `PAYLOAD_TOO_LARGE`; `prepareImage` (unknown type → `UNSUPPORTED_MEDIA` "Unsupported image. Use JPG, PNG, WEBP or HEIC."); `callJson` with the image, input "Extract every business card in this photo.", schema `{ cardCount: int 0–50, contacts: ContactInput[] }`; if `cardCount !== contacts.length` add `warning` "The AI counted N cards but read M. Check the photo for missed cards."; `cleanForReview` each; `findDuplicates`; return `{ cardCount, contacts, warning? }`.
 - Both keep the AI step as a separate exported function without the database (`extractContactsFromText`, `extractContactsFromPhoto`) so the evals can call it.
 
 ### 8.6 `contacts.repo.ts`
-- `listContacts(scope, query)`: exact-match filters on `Company`, `City`, `Sector`, `DepartmentId`, `CreatedBy`; `dateFrom` / `dateTo` as whole UTC days on `CreatedAt`; sort by the chosen field then `_id` descending; page; returns `{ items, total }`.
+- `listContacts(scope, query)`: exact-match filters on `Company`, `City`, `Sector`, `DepartmentId`, `CreatedBy`; `dateFrom` / `dateTo` as whole days in the app time zone on `CreatedAt`; sort by the chosen field then `_id` descending; page; returns `{ items, total }`.
 - `listAllContacts(scope, filters)`: the same filters, newest first, no paging (export).
 - `quickSearch(scope, q, limit = 20)` → `{ items, total }`. `q` = digits normalized and trimmed.
   1. Fewer than 2 characters → empty.
-  2. Only `+ digits space - ( ) .` with 3+ digits → regex on `_mobiles` using the digits with a leading `00964`, `964` or `0` removed; newest first. Office and fax numbers in `Notes` are not found this way.
-  3. Contains `@` → regex on `_emails` (lowercase); newest first.
+  2. Only `+ digits space - ( ) .` with 3+ digits → regex on `_mobiles` using the digits with a leading `00964`, `964` or `0` removed (if that leaves nothing, the digits as typed); newest first. Office and fax numbers in `Notes` are not found this way.
+  3. Contains `@` → regex on `_emails` (lowercase); newest first. In steps 2 and 3 the query is always escaped before it goes into a regex, and an empty pattern is never run.
   4. Otherwise Atlas Search `compound.should` (at least one must match), with the scope in `compound.filter`:
      - exact-prefix autocomplete on `FullName` (boost 6) and `Company` (boost 4);
      - fuzzy autocomplete (`maxEdits: 1, prefixLength: 1`) on `FullName` (4), `Company` (3), `Position` (2);
      - fuzzy text on `FullName, Company, Position, City, Notes, Email` (`maxEdits` 2 when `q` has 5+ characters, else 1; `prefixLength: 1`; boost 2);
      - text on the `ar` sub-field of `FullName, Company, Position, City, Notes`.
      The total comes from `$searchMeta` with the **same** compound, including the scope filter.
-- `searchContacts(scope, params)` (Ask AI): each of `FullName`, `Position`, `Company`, `City` given → a `must` clause (fuzzy text on the field, or text on its `ar` sub-field); `text` → a `must` clause over all text fields; `Sector` → `equals` filter; dates → `range` filter on `CreatedAt`; plus the scope filter; limit ≤ 20. No parameters at all → the newest contacts.
+- `searchContacts(scope, params)` (Ask AI): each of `FullName`, `Position`, `Company`, `City` given → a `must` clause (fuzzy text on the field, or text on its `ar` sub-field); `text` → a `must` clause over all text fields; `Sector` → `equals` filter; dates → `range` filter on `CreatedAt` (whole days in the app time zone); plus the scope filter; limit ≤ 20. No parameters at all → the newest contacts.
 - `getContact(scope, id)`; `getContactsByIds(scope, ids)` (keeps the order of `ids`, drops invalid, unknown and out-of-scope ids).
 - `insertContacts(writer, inputs, source)`: refuse invalid emails; `cleanContact`; add match keys, `DepartmentId`, `CreatedBy`, `UpdatedBy`, dates; insert; audit.
 - `updateContact(writer, id, patch)`: refuse invalid emails; find within the writer's scope; merge; `cleanContact`; recompute match keys; set `UpdatedBy`, `UpdatedAt`; audit with the previous document.
@@ -493,6 +505,7 @@ Round = one `chat()` call.
 - `listValues(scope, field, max?)`: distinct non-empty values with counts, most used first.
 - `listCreators(scope)`: the users who added contacts in scope, with counts; contacts added by scripts are not listed.
 - `findDuplicates(departmentId, contacts)`: marks a contact with `duplicateOfId` / `duplicateOfName` when a saved contact **in the same department** shares a mobile or email, and with `duplicateInBatch` (index) when an earlier contact in the batch does.
+- `deleteAllContacts()`: empties the `contacts` collection. It refuses unless the database name contains `test` or is `EVAL_DB`. Used only by `seed --reset` and `eval:search`; no route calls it.
 
 ### 8.7 `contacts/export.ts`
 - Columns: the 8 fields, then `Department` (High Management only), `Source`, `CreatedAt`. Table exports are newest first.
@@ -511,7 +524,7 @@ vCard 3.0 with CRLF line ends, lines folded at 75 bytes (never inside a characte
 5. Insert with `source: "import"` unless `--dry-run`. Print imported / skipped / failed and write the full report to `import-reports/`.
 
 ### 8.10 `search/ask.ts` — `ask(scope, question, today = new Date())`
-Empty → `VALIDATION` "Type a question first."; over 500 characters → `VALIDATION`. Then `runToolLoop` with the search prompt, user text `Today is YYYY-MM-DD.\nQuestion: <question>`, `searchTools(scope)`, the final tool, 3 rounds. Then `getContactsByIds(scope, result.contactIds)`. Returns `{ answer, contacts, rounds }`.
+Empty → `VALIDATION` "Type a question first."; over 500 characters → `VALIDATION`. Then `runToolLoop` with the search prompt, user text `Today is YYYY-MM-DD.\nQuestion: <question>` (the date in the app time zone), `searchTools(scope)`, the final tool, 3 rounds. Then `getContactsByIds(scope, result.contactIds)`. Returns `{ answer, contacts, rounds }`.
 
 Tools are defined in `tools.md` §6.
 
@@ -623,7 +636,7 @@ Make a new version, one change at a time, and re-run the eval. Changes that usua
 Fixtures are written as part of the build (formats and examples in `tools.md` §10):
 - `tests/fixtures/sample-contacts.json`: 30 contacts — Arabic, English and bilingual names; all 6 sectors; several Iraqi cities; mobiles written in different ways.
 - `tests/fixtures/text/NN-name.txt` + `.expected.json`: 10 samples — English signature, Arabic signature, WhatsApp list, bilingual card lines, two signatures in one text, Arabic numbered list, company without a person, meeting notes, CSV-like lines, mixed Arabic-Indic digits.
-- `tests/fixtures/photos/*.jpg` + `.expected.json`: 10 **synthetic** photos rendered by `scripts/make-photo-fixtures.ts` (SVG cards composited with `sharp` on a table background): 1, 4, 8 and 12 cards; English, Arabic and bilingual; rotated 90°, angled, uneven light, dark table. Real phone photos can be dropped in the same folder with an expected file and are picked up.
+- `tests/fixtures/photos/*.jpg` + `.expected.json`: 10 **synthetic** photos rendered by `scripts/make-photo-fixtures.ts` (SVG cards composited with `sharp` on a table background): 1, 4, 8 and 12 cards; English, Arabic and bilingual; rotated 90°, angled, uneven light, dark table. Real phone photos can be dropped in the same folder with an expected file and are picked up. Arabic text is drawn with a font file kept in `tests/fixtures/fonts/` (never a system font), and the rendered JPGs are committed, so every machine evaluates the same pixels. Synthetic photos are easier than real ones: at least 3 real phone photos of test cards are added before the photo target counts as met, and their result is reported separately.
 - `tests/fixtures/search/questions.json`: 20 Ask questions and 12 quick search queries, each with the `FullName` it must find among the 30 sample contacts.
 - `tests/fixtures/import/sample.csv`: a CSV with Arabic headers, duplicates, an empty row and an invalid email.
 
@@ -637,7 +650,7 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
 
 **Scripts**
 - `eval:text` and `eval:photo`: run every fixture (an optional argument keeps only names containing it), score, print, save JSON to `eval-results/`, exit 0 only when the target is met.
-- `eval:search`: uses its **own database** (`EVAL_DB`, default `cards_eval`, never `MONGODB_DB`). It runs `setupDatabase`, deletes every contact there, inserts the 30 sample contacts into High Management, and waits until Atlas Search finds them. Quick search: the expected name must be in the top 3 and each query under 300 ms. Ask: the expected name must be in the top 3 within 3 rounds. `--quick-only` skips Ask.
+- `eval:search`: uses its **own database** (`EVAL_DB`, default `cards_eval`, never `MONGODB_DB`). It runs `setupDatabase`, deletes every contact there (`deleteAllContacts`), inserts the 30 sample contacts into High Management, and waits until Atlas Search finds them. Quick search: the expected name must be in the top 3 and each query under 300 ms, measured as the time of the `quickSearch` call: the median of 5 runs after one warm-up run. Ask: the expected name must be in the top 3 within 3 rounds. `--quick-only` skips Ask.
 - For free models, all three: `--limit N`; a pause between calls to stay under 20 requests a minute; the report prints the configured model **and the model that answered**, the JSON mode, and the counts of retries, 429s and failures; a fixture that fails on an API error counts as failed and is listed separately.
 - Budget: text 10, photo 10, search up to 60 requests. Not all on one day without the $10 credits.
 
@@ -654,10 +667,10 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
 - A missed accuracy target is not hidden or worked around: report the numbers and the misses, and wait.
 
 ### Phase 0 — Setup
-1. `.gitignore` includes `.env*` except `.env.example`, plus `eval-results/` and `import-reports/`.
+1. `.gitignore` includes `.env*` except `.env.example`, plus `eval-results/`, `import-reports/` and `tests/mock-ai/requests.log`.
 2. Next.js 16 app (TS strict, Tailwind, shadcn/ui, ESLint, Prettier). Install `zod`, `mongodb`, `sharp`, `heic-convert`, `vitest`, `tsx`. **No AI SDK.**
 3. Folder structure; `lib/config.ts` with every key of `tools.md` §4 and the free-only check; `.env.example`; `instrumentation.ts`.
-4. `dev` / `start` bind to `127.0.0.1`. `next.config.ts` as in Fixed Decisions. GitHub Actions workflow running `npm run check`.
+4. `dev` / `start` bind to `127.0.0.1`. `next.config.ts` as in Fixed Decisions. GitHub Actions workflow running `npm run check` (the `test:db` job is added in Phase 1).
 5. `shared/errors.ts`, `shared/api-response.ts`, `lib/api.ts`.
 6. Layout with the sidebar and empty pages.
 
@@ -675,36 +688,37 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
    - A High Management editor can edit a contact in A (it stays in A) and delete it.
    - The same phone number in A and B gives no duplicate warning across departments; within A it does.
    - `DepartmentId` sent in a save or edit request is ignored.
+   - Quick search with regex characters (`.*`, `(`, `a@.*`) or with only `964` does not fail and does not return every contact.
    - Each role can do only what the roles table allows, enforced at the API, not only by hidden buttons.
    - A deactivated user is refused on the next request and the cookie is deleted; an unknown username gets the same message as a wrong password.
    - 5 wrong passwords lock the username for that address; a password reset lifts the lock and ends the user's sessions; an inactive department's people cannot sign in.
    - Admins must be in High Management; nobody can remove their own admin access; the last active admin stays.
 
-**Done when:** contact routes work with the 30 sample contacts; quick search finds "Moh" → "Mohammed", "Mohamad" → "Mohammed", "احمد" → "أحمد" and a partial mobile number in < 300 ms server time; every DB test above passes (`npm run test:db` green); an old session after a password change lands on the login page once, with no reload loop.
+**Done when:** contact routes work with the 30 sample contacts; quick search finds "Moh" → "Mohammed", "Mohamad" → "Mohammed", "احمد" → "أحمد" and a partial mobile number in < 300 ms (median `quickSearch` time, measured as in §10); every DB test above passes (`npm run test:db` green, locally and in the GitHub Actions job on Atlas Local); an old session after a password change lands on the login page once, with no reload loop.
 
 ### Phase 2 — AI module
 1. `ai/client.ts`, `json.ts`, `call-json.ts`, `tool-loop.ts`, `log.ts`.
 2. `tests/mock-ai/server.mjs`.
 3. Unit tests with mocked `fetch`:
-   - `callJson`: valid output; fenced JSON accepted; invalid → retry → valid; invalid twice → `AI_FAILED`; `length` and `content_filter` not retried; image sent as a data URL to the vision model; `prompt` mode sends no `response_format`; `max_tokens` capped.
-   - `client`: per-minute 429 retried then succeeds; daily 429 not retried → `TOO_MANY_REQUESTS`; 5xx retried; HTTP 200 with an `error` body fails; timeout; no raw error text in the `AppError` message; fallbacks sent as `models`.
+   - `callJson`: valid output; fenced JSON accepted; invalid → retry → valid; invalid twice → `AI_FAILED`; `length` and `content_filter` not retried; image sent as a data URL to the vision model; `prompt` mode sends no `response_format`; `max_tokens` capped; `length` with empty content gives the "ran out of room" message.
+   - `client`: per-minute 429 retried then succeeds; daily 429 not retried → `TOO_MANY_REQUESTS`; 5xx retried; HTTP 200 with an `error` body fails; timeout; no raw error text in the `AppError` message; text fallbacks sent as `models` on text requests and vision fallbacks on image requests; the deadline shortens the timeout, stops further retries and gives the timed-out message.
    - `runToolLoop`: several tool calls in one turn; unparseable arguments and unknown tools answered as errors; early final answer; prose final answer accepted; forced final round; nothing valid → `AI_FAILED`.
    - `json`: keyword stripping; strict flags only in strict mode; loose parsing cases.
 4. `scripts/ai-models.ts` and `scripts/ai-smoke.ts`.
 
-**Done when:** unit tests pass; `npm run ai:models` lists free models per ability and says whether the configured ones qualify; `npm run ai:smoke` returns one validated contact from a real free model.
+**Done when:** unit tests pass; `npm run ai:models` lists free models per ability and says whether the configured ones qualify; `npm run ai:smoke` returns one validated contact from a real free model; `npm run ai:smoke -- --tools` finishes a tool loop with a stub tool on the text model.
 
 ### Phase 3 — Add from Text
 1. `sector-rules.v1.ts`, `structure-text.v1.ts`, `structure-text.ts`.
-2. Route `api/extract/text`; page; `ReviewTable`; **Add manually**; save through `POST /api/contacts`.
+2. `accounts/ai-usage.ts` and `requireAccess(…, { ai: true })`; route `api/extract/text`; page; `ReviewTable`; **Add manually**; save through `POST /api/contacts`.
 3. The 10 text fixtures; `eval-score.ts` (with unit tests); `npm run eval:text`.
 
-**Done when:** re-submitting the same text flags its contacts as duplicates; the same person twice in one text flags the in-batch duplicate; an invalid email blocks the save; a daily-cap error shows the friendly message and the manual path still saves; the eval runs and reports numbers.
+**Done when:** re-submitting the same text flags its contacts as duplicates; the same person twice in one text flags the in-batch duplicate; an invalid email blocks the save; a daily-cap error shows the friendly message and the manual path still saves; a person over `AI_USER_DAILY_LIMIT` gets the per-user message while another person can still use the AI, and the count starts again the next day (DB test); the eval runs and reports numbers.
 
 ### Phase 4 — Model selection
-1. From `ai:models`, shortlist up to 3 text models (tool calling; structured outputs preferred) and up to 3 vision models (image input).
+1. From `ai:models`, shortlist up to 3 text models (tool calling; structured outputs preferred) and up to 3 vision models (image input). Every text candidate must pass `npm run ai:smoke -- --tools` first: the same model answers Ask AI in Phase 6, and the model list alone does not prove that tool calling works.
 2. For each, run `eval:text -- --limit 3` in `schema` mode; if the model rejects it, in `prompt` mode.
-3. Pick `AI_MODEL_TEXT`, `AI_JSON_MODE` and up to 2 fallbacks, then run the full `eval:text`. The vision model is confirmed in Phase 5.
+3. Pick `AI_MODEL_TEXT`, `AI_JSON_MODE` and up to 2 `AI_FALLBACK_MODELS_TEXT`, then run the full `eval:text`. The vision model is confirmed in Phase 5.
 
 **Done when:** `eval:text` ≥ 95% on key fields with the chosen model (below that: report and wait); the candidates, their results, the date and the chosen values are in Progress and as comments in `.env.example`.
 
@@ -713,20 +727,20 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
 2. Route `api/extract/photo`; page.
 3. `make-photo-fixtures.ts` and the 10 photo fixtures; `npm run eval:photo`; choose `AI_MODEL_VISION` the same way as in Phase 4.
 
-**Done when:** card count correct on ≥ 9/10 photos and field accuracy ≥ 90%; an 8 MB iPhone HEIC extracts. **Expected weak spot:** 8- and 12-card photos. If they fail, report results per card count and wait for the owner to choose: accept and show "up to N cards per photo" on the page, another model, or the "detect → crop → extract per card" upgrade (§12).
+**Done when:** card count correct on ≥ 9/10 synthetic photos and field accuracy ≥ 90%; the real phone photos are run and reported separately (§10); an 8 MB iPhone HEIC extracts on a local run; on Vercel, a large phone photo extracts after the browser shrinks it, and an upload the host rejects shows the "too large to upload" message. **Expected weak spot:** 8- and 12-card photos. If they fail, report results per card count and wait for the owner to choose: accept and show "up to N cards per photo" on the page, another model, or the "detect → crop → extract per card" upgrade (§12).
 
 ### Phase 6 — Explore
 1. `search/tools.ts`, `search.v1.ts`, `search/ask.ts`; route `api/ask`.
 2. `SearchBar`, `Overview`, `ContactTable`, `ContactForm`, filters, export button, vCard button.
 3. `questions.json`; `npm run eval:search`.
 
-**Done when:** ≥ 90% of Ask questions return the right contact in the top 3 within 3 rounds (below that: report and wait); quick search 12/12 under 300 ms; the table stays responsive with 12,000 seeded contacts; Ask as department A never returns a contact of department B (DB test with a mocked AI that returns B's ids).
+**Done when:** ≥ 90% of Ask questions return the right contact in the top 3 within 3 rounds (below that: report and wait; one option is a separate `AI_MODEL_SEARCH`, §12); quick search 12/12 under 300 ms; the table stays responsive with 12,000 seeded contacts; Ask as department A never returns a contact of department B (DB test with a mocked AI that returns B's ids).
 
 ### Phase 7 — Import, admin pages, PWA, polish
 1. `import.ts`, `scripts/import-csv.ts`, with unit tests and the sample CSV.
 2. Admin pages (users, departments, activity), My account, Team.
 3. PWA: manifest, icons, service worker, offline page.
-4. Loading, empty and error states on every page; unsaved-work guards; toasts; the three AI messages of §2.8.
+4. Loading, empty and error states on every page; unsaved-work guards; toasts; the AI messages of §2.8.
 5. `README.md`: setup from zero, OpenRouter key and privacy setting, choosing models, env, scripts, troubleshooting.
 
 **Done when:** the CSV import gives a clean report on the sample file; all targets hold at 12,000 contacts; the README runs the project from a fresh clone with only an OpenRouter key and a MongoDB URI; sign-in works with two accounts in different departments, each seeing only its own contacts; the app is deployed on Vercel, Add from Text, Add from Photo and Ask AI work there, and it installs on a phone over HTTPS.

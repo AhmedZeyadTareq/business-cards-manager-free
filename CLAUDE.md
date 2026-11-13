@@ -40,7 +40,7 @@ Before using a Next.js API, read the matching guide in `node_modules/next/dist/d
 - `npm run db:seed -- --department <name> --sample` — load the 30 sample contacts
 - `npm run users:add-admin -- <username> --name "Full Name"` — first admin (creates High Management)
 - `npm run ai:models` — list free OpenRouter models by ability; check the configured ones
-- `npm run ai:smoke` — one real AI call (uses 1 request of the daily free allowance)
+- `npm run ai:smoke` — one real AI call (uses 1 request of the daily free allowance); `-- --tools` also proves tool calling (up to 2 more)
 - `npm run eval:text` / `eval:photo` / `eval:search` — AI accuracy reports (real API; they spend the daily free allowance — use `--limit N`)
 - `npm run import:csv -- <file> --department <name>` — import contacts from a CSV file
 
@@ -50,6 +50,8 @@ Before using a Next.js API, read the matching guide in `node_modules/next/dist/d
 - Only `src/modules/db/`, `contacts.repo.ts`, `src/modules/accounts/` and `src/modules/audit/` touch MongoDB.
 - Every API route calls `requireAccess()`; contacts reads take its `scope`, writes take the access as `Writer`. Never take `DepartmentId` from the browser or the AI.
 - All AI output goes through `callJson` or `runToolLoop` and is validated with Zod. Treat it as untrusted text: it may be invalid JSON, wrapped in code fences, or empty.
+- The three AI routes call `requireAccess(…, { ai: true })` (per-user daily limit), and every AI action stays inside one deadline (`AI_DEADLINE_MS`).
+- Every API response sends `Cache-Control: no-store`.
 - The AI never writes to the database; saving happens only via `POST /api/contacts` after user review.
 - `contact.schema.ts` is the single source of truth (fields, `SECTORS`, `SOURCES`).
 - Prompts are versioned `*.vN.ts` files; a prompt change = new version file + re-run its eval.
@@ -66,9 +68,9 @@ Before using a Next.js API, read the matching guide in `node_modules/next/dist/d
 - Never log prompt or response bodies: log prompt id, model, latency and token counts only.
 
 ## Quality
-- `npm run check` must be green before finishing any phase.
+- `npm run check` must be green before finishing any phase. CI runs it and `npm run test:db` (Atlas Local).
 - Every AI feature has fixtures and an `eval:*` script; report accuracy using `scripts/eval-score.ts`, always with the model id.
-- Unit tests never call the real API: they mock `fetch`. End-to-end tests use `tests/mock-ai/server.mjs` through `OPENROUTER_BASE_URL`.
+- Unit tests never call the real API: they mock `fetch`. There is no automated end-to-end suite: to try the pages without a key, run `tests/mock-ai/server.mjs` and point `OPENROUTER_BASE_URL` at it.
 
 ## Workflow
 Follow `plan.md` exactly: one phase at a time, pass every "Done when" check, update Progress, commit, stop and report, wait for approval.

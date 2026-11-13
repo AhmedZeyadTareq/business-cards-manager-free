@@ -10,7 +10,7 @@ OpenRouter screens, limits and free models change. Where this file and <https://
 
 | Thing | Notes |
 |---|---|
-| Node.js 22+ and npm | |
+| Node.js 22.9+ and npm | The scripts use `--env-file-if-exists` |
 | Git + an empty repository | |
 | OpenRouter account | Free. No card needed for free models |
 | MongoDB Atlas account (free M0 cluster) | Or Docker with Atlas Local, for a fully local test setup |
@@ -49,7 +49,8 @@ The free tier has no automatic backups, and deletes in the app are permanent. Mo
 | 1 | Creates the Atlas cluster and gives `MONGODB_URI` |
 | 2 | Creates the OpenRouter key and checks the privacy setting |
 | 4, 5 | Approves the chosen models, or decides what to do if a target is missed |
-| 7 | Supplies the logo, colours and Team page names, and tries the app on a phone |
+| 5 | Supplies at least 3 real phone photos of test cards (not real contacts) |
+| 7 | Supplies the logo, colours and Team page names, connects the repository to Vercel, and tries the app on a phone |
 
 4. What can be built and tested with **no key and no database**: everything covered by `npm run check` — cleaning rules, schemas, export, vCard, sessions, passwords, the whole AI module (with mocked `fetch`), the tool loop, eval scoring, CSV import parsing. The mock AI server (`tools.md` §8) lets the pages be tried in a browser without spending free requests; it still needs a database.
 
@@ -65,11 +66,11 @@ The free tier has no automatic backups, and deletes in the app are permanent. Mo
 ## 4. Choosing the models
 
 1. `npm run ai:models`. It needs no key and uses no free requests.
-2. **Text model** (`AI_MODEL_TEXT`): must support `tools`. Prefer one that also lists `structured_outputs`, with a large context and good Arabic.
+2. **Text model** (`AI_MODEL_TEXT`): must support `tools`. Prefer one that also lists `structured_outputs`, with a large context and good Arabic. Prefer models that do not list `reasoning`: thinking uses up `AI_MAX_TOKENS` and time.
 3. **Vision model** (`AI_MODEL_VISION`): must list `image` as an input. It needs no tool support. Structured outputs preferred.
-4. For each candidate: set it in `.env.local`, run `npm run ai:smoke`, then `npm run eval:text -- --limit 3` or `npm run eval:photo -- --limit 3`.
+4. For each candidate: set it in `.env.local`, run `npm run ai:smoke` (text models also `npm run ai:smoke -- --tools`, because the same model answers Ask AI), then `npm run eval:text -- --limit 3` or `npm run eval:photo -- --limit 3`.
 5. If a model rejects `response_format` (HTTP 400 or 404), set `AI_JSON_MODE=prompt` and try again.
-6. Keep the best one per feature, add up to 2 `AI_FALLBACK_MODELS`, run the full evals, and write the numbers in `plan.md` Progress.
+6. Keep the best one per feature, add up to 2 fallbacks per feature (`AI_FALLBACK_MODELS_TEXT` must support tools, `AI_FALLBACK_MODELS_VISION` must accept images), run the full evals, and write the numbers in `plan.md` Progress.
 
 `openrouter/free` works with no choice at all and is fine for a first run, but it may pick a different model for each request, so eval numbers are not repeatable. Pin real model ids before measuring.
 
@@ -98,7 +99,7 @@ The local run is for testing only: it is bound to `127.0.0.1`, so no other compu
 
 **Test the production build before a deploy:** `npm run build && npm start` (still bound to `127.0.0.1`).
 
-**Vercel (production):** import the repository, set every key of `.env.example` in the project settings, and pick a region next to the Atlas cluster (`vercel.json`). Free models can be slow: make sure the function duration for the extract and ask routes is long enough for `AI_TIMEOUT_MS` plus retries (check the limits of your Vercel plan).
+**Vercel (production):** import the repository, set every key of `.env.example` in the project settings, and pick a region next to the Atlas cluster (`vercel.json`). Free models can be slow. One AI action never runs longer than `AI_DEADLINE_MS` (default 120 s), and the AI routes set their function duration 20 s above it: check that your Vercel plan allows that duration, and lower `AI_DEADLINE_MS` if it does not. Vercel also limits the size of an upload, which is why large photos are shrunk in the browser first.
 
 **Phones:** open the HTTPS address and use the browser's "Add to Home Screen" / "Install app". The app needs a connection; it keeps no contacts on the device.
 
@@ -121,6 +122,8 @@ The report is written to `import-reports/`.
 | Ask AI | 1–3 |
 
 - The cap is per OpenRouter account, shared by everyone using the app. More keys do not add capacity.
+- Each person can start `AI_USER_DAILY_LIMIT` AI actions a day (default 15), so one person cannot use up the office's allowance. Set it to fit the office: people × limit should not be far above the daily cap.
+- Pressing Enter in the search box never uses the AI. Only the Ask AI button does.
 - Without credits (50 a day) the app suits a demo or one or two people. With the one-time $10 (1,000 a day) it suits a small office.
 - Teach staff: quick search first, Ask AI only when quick search cannot answer.
 
@@ -133,14 +136,16 @@ The report is written to `import-reports/`.
 | Startup error naming `AI_MODEL_*` | Model id is not free | Use a `:free` id, or set `AI_ALLOW_PAID=true` on purpose |
 | "The AI model is not available" / 404 "No endpoints found…" | Privacy setting blocks free endpoints, `AI_DATA_COLLECTION=deny` leaves no provider, or the model was removed | §2.1 step 2; set `allow`; run `ai:models` |
 | "Today's free AI allowance is used up" | Daily cap | Wait for the reset, or the one-time $10 |
-| "AI service is busy" often | 20-a-minute cap or a crowded free model | Add `AI_FALLBACK_MODELS`; try another model |
+| "AI service is busy" often | 20-a-minute cap or a crowded free model | Add `AI_FALLBACK_MODELS_TEXT` / `AI_FALLBACK_MODELS_VISION`; try another model |
 | 400 on every extraction | Model does not support `response_format`, or `max_tokens` is above its limit | `AI_JSON_MODE=prompt`; lower `AI_MAX_TOKENS` |
 | Photo extraction stops with "Input is too large for one request" | Output cut off at `AI_MAX_TOKENS` | Raise `AI_MAX_TOKENS` if the model allows; fewer cards per photo |
 | "The AI returned data in an unexpected format" often | Model too weak for the schema | Another model; a new prompt version with a worked example (`plan.md` §9.5) |
 | Ask AI always "did not finish" | Model has no real tool calling, or answers in prose | Pick a model listing `tools`; check the server log for the `finish_reason` |
 | Ask AI finds nothing although quick search does | Tool schema sent as strict, so the model fills every search field | Tool parameters must use `toProviderSchema(schema, { strict: false })` |
 | Photos: wrong card count, mixed-up cards | Too many cards for the model | Fewer cards per photo; another vision model; the per-card upgrade |
-| Photo requests time out | Slow free vision model | Raise `AI_TIMEOUT_MS`; lower the resize edge in `prepare-image.ts` |
+| Photo requests time out | Slow free vision model | Another vision model; raise `AI_TIMEOUT_MS` and `AI_DEADLINE_MS` (inside the Vercel function limit); lower the resize edge in `prepare-image.ts` |
+| "The AI ran out of room before answering" | A reasoning model used all of `AI_MAX_TOKENS` thinking | A model that does not list `reasoning`; or raise `AI_MAX_TOKENS` if the model allows |
+| "You have used your AI allowance for today" | That person reached `AI_USER_DAILY_LIMIT` | Wait for the next day (app time zone), or raise the limit |
 | "This photo is too large to upload" | The host's request limit, usually a HEIC the browser could not shrink | Export the photo as JPG |
 | 402 | Negative credit balance | Fix the balance in OpenRouter |
 | Quick search returns nothing | Atlas Search index missing or still building | `npm run db:setup`; wait a minute |

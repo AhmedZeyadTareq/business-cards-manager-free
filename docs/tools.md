@@ -14,7 +14,7 @@ OpenRouter details were checked against its documentation in November 2026. Limi
 | **MongoDB Atlas** free tier (M0) | Contacts, users, departments, activity log, Atlas Search | Free | Connection string (`MONGODB_URI`) |
 | MongoDB **Atlas Local** (Docker) | Tests and fully local runs (it includes Atlas Search) | Free | Docker |
 | **Vercel** | Production hosting (a local run is only for testing before a deploy) | Free tier | Account; env values set in the project |
-| **GitHub** | Repository + Actions running `npm run check` | Free | — |
+| **GitHub** | Repository + Actions running `npm run check` and `npm run test:db` (on an Atlas Local service container) | Free | — |
 
 Plain MongoDB Community does not work: quick search and Ask AI need **Atlas Search** (`$search`), which only Atlas and Atlas Local provide.
 
@@ -51,6 +51,7 @@ Scripts run with `node --env-file-if-exists=.env.local --import tsx <file>`.
 | `npm run fixtures:photos` | Renders the synthetic photo fixtures | 0 |
 | `npm run ai:models` | Lists free models by ability and checks the configured ones | 0 (public endpoint) |
 | `npm run ai:smoke` | One real call through `callJson` | 1 |
+| `npm run ai:smoke -- --tools` | One real `runToolLoop` with a stub tool on the text model: proves tool calling works | up to 2 |
 | `npm run eval:text [-- <name>] [--limit N]` | Accuracy of text → contacts. `<name>` keeps only fixtures whose name contains it | 10 (+ retries) |
 | `npm run eval:photo [-- <name>] [--limit N]` | Accuracy of photo → contacts | 10 (+ retries) |
 | `npm run eval:search [-- --limit N]` | Ask AI (20 questions) + quick search (12 queries). Runs on its own database `EVAL_DB` and **deletes every contact there first** | up to 60 |
@@ -68,20 +69,24 @@ All keys are validated at startup in `src/lib/config.ts` (Zod). Empty strings co
 | `OPENROUTER_API_KEY` | Yes | — | OpenRouter key |
 | `AI_MODEL_TEXT` | No | `openrouter/free` | Model for Add from Text and Ask AI. Must support tool calling |
 | `AI_MODEL_VISION` | No | `openrouter/free` | Model for Add from Photo. Must accept image input |
-| `AI_FALLBACK_MODELS` | No | empty | Comma-separated model ids OpenRouter tries if the main one is down or rate-limited (keep it short: OpenRouter limits the list length) |
+| `AI_FALLBACK_MODELS_TEXT` | No | empty | Comma-separated model ids OpenRouter tries for Add from Text and Ask AI if the main one is down or rate-limited. Each must support tool calling (keep it short: OpenRouter limits the list length) |
+| `AI_FALLBACK_MODELS_VISION` | No | empty | The same for Add from Photo. Each must accept image input |
 | `AI_JSON_MODE` | No | `schema` | `schema` = `response_format: json_schema`; `prompt` = schema written into the prompt (for models without structured outputs) |
 | `AI_DATA_COLLECTION` | No | `allow` | `deny` = only providers that do not collect prompts (fewer free endpoints) |
 | `AI_ALLOW_PAID` | No | `false` | `true` allows a model id that is not free |
-| `AI_TIMEOUT_MS` | No | `90000` | Timeout of one AI request |
-| `AI_MAX_TOKENS` | No | `8000` | Upper limit for `max_tokens` on every request. Lower it if a model rejects the request; raise it if 12-card photos stop with `length` |
+| `AI_TIMEOUT_MS` | No | `60000` | Timeout of one AI request |
+| `AI_DEADLINE_MS` | No | `120000` | Total time for one user action (all requests, retries and rounds together). Not below `AI_TIMEOUT_MS`. The AI routes' function duration is this plus 20 s, so keep it inside the Vercel plan's limit |
+| `AI_MAX_TOKENS` | No | `8000` | `max_tokens` of every request (a caller may ask for less, never more). Lower it if a model rejects the request; raise it if 12-card photos stop with `length` |
+| `AI_USER_DAILY_LIMIT` | No | `15` | AI actions one person may start per day (one extraction or one question = 1). `0` = no limit |
+| `APP_TIME_ZONE` | No | `Asia/Baghdad` | IANA time zone for displayed times, date-filter days, "today" in Ask AI and the per-user AI day |
 | `OPENROUTER_BASE_URL` | No | `https://openrouter.ai/api/v1` | Only for tests (mock server) |
 | `MONGODB_URI` | Yes | — | Must start with `mongodb://` or `mongodb+srv://` |
 | `MONGODB_DB` | No | `cards` | Database name |
 | `EVAL_DB` | No | `cards_eval` | Database used (and emptied) by `eval:search` only |
 | `MAX_TEXT_CHARS` | No | `20000` | Longest text for Add from Text |
-| `MAX_IMAGE_MB` | No | `20` | Largest photo upload (max 50) |
+| `MAX_IMAGE_MB` | No | `20` | Largest photo upload (max 20: the proxy body limit is 25 MB) |
 
-"Free" means the id ends in `:free` or is `openrouter/free`. `config.ts` refuses anything else in `AI_MODEL_TEXT`, `AI_MODEL_VISION` and `AI_FALLBACK_MODELS` unless `AI_ALLOW_PAID=true`.
+"Free" means the id ends in `:free` or is `openrouter/free`. `config.ts` refuses anything else in `AI_MODEL_TEXT`, `AI_MODEL_VISION` and both `AI_FALLBACK_MODELS_*` lists unless `AI_ALLOW_PAID=true`. `ai:models` uses the same rule, so it never recommends a model the config would refuse.
 
 ## 5. The AI layer (`src/modules/ai/`)
 
@@ -97,7 +102,7 @@ callJson<S extends z.ZodType>(opts: {
   input: string;
   schema: S;
   image?: JsonImage;      // present → AI_MODEL_VISION, absent → AI_MODEL_TEXT
-  maxTokens?: number;     // default 16000, always capped at AI_MAX_TOKENS
+  maxTokens?: number;     // default AI_MAX_TOKENS; a larger value is cut to it
 }): Promise<z.infer<S>>;  // throws AppError("AI_FAILED") or AppError("TOO_MANY_REQUESTS")
 
 // tool-loop.ts
@@ -115,7 +120,7 @@ runToolLoop<F extends z.ZodType>(opts: {
 
 | File | Job |
 |---|---|
-| `client.ts` | `chat(body)`: the only `fetch` to OpenRouter. Adds auth, `models` fallbacks, `provider` options, the `max_tokens` cap, timeout, retries; maps errors to `AppError` |
+| `client.ts` | `chat(body, deadline)`: the only `fetch` to OpenRouter. Adds auth, the text or vision `models` fallbacks, `provider` options, the `max_tokens` cap, timeout, retries, all inside the caller's deadline; maps errors to `AppError` |
 | `call-json.ts` | One prompt → one validated object, one corrective retry |
 | `tool-loop.ts` | Bounded tool loop for Ask AI |
 | `json.ts` | `toProviderSchema(zodSchema, { strict })` and `parseJsonLoose(text)`. `strict: true` only for `response_format`; `strict: false` for tool parameters |
@@ -189,11 +194,11 @@ Headers: `Authorization: Bearer <key>`, `Content-Type: application/json`. Option
 }
 ```
 
-- Send `models` only when `AI_FALLBACK_MODELS` is set.
+- `model` is always sent. Add `models` only when fallbacks are set for this kind of request: `AI_FALLBACK_MODELS_VISION` when a message has an image, otherwise `AI_FALLBACK_MODELS_TEXT`. Confirm in the OpenRouter model routing docs that `model` and `models` may be sent together before the first real call.
 - `provider.require_parameters: true` routes only to providers that support every parameter sent (here: `response_format`).
 - `response-healing` repairs small JSON syntax errors on non-streaming `json_schema` requests.
 - Strict schemas need `additionalProperties: false` and every property in `required`. `toProviderSchema(schema, { strict: true })` adds these and removes keywords some providers reject (`$schema`, `maxLength`, `minimum`, `maximum`, `format`, `pattern`). Zod re-checks all of them afterwards. Strict mode is for `response_format` only, never for tool parameters.
-- `max_tokens` is the caller's value capped at `AI_MAX_TOKENS`.
+- `max_tokens` is `AI_MAX_TOKENS`, or the caller's value when it is lower.
 
 ### 7.2 `AI_JSON_MODE=prompt`
 
@@ -208,7 +213,7 @@ Reply with one JSON object only, no other text and no code fences. It must match
 
 ### 7.3 Photo (`callJson` with `image`)
 
-Same as 7.1 with `AI_MODEL_VISION` and this user message:
+Same as 7.1 with `AI_MODEL_VISION`, the vision fallbacks, and this user message:
 
 ```json
 {
@@ -262,6 +267,7 @@ Round 3 (last): the same messages plus `{ "role": "user", "content": "Give the f
 | `choices[0].finish_reason` | `stop`, `tool_calls`, `length` (cut off), `content_filter` (declined) |
 | `model` | The model that really answered (differs with fallbacks or `openrouter/free`): log it |
 | `usage.prompt_tokens`, `usage.completion_tokens` | Log |
+| `choices[0].message.reasoning` | Some models think before answering. Never shown and never logged. Thinking uses up `max_tokens`: empty `content` with `finish_reason: "length"` means the model ran out before answering (`plan.md` §8.2). Read the reasoning page of the OpenRouter docs before sending any `reasoning` option; with `require_parameters` it would exclude models that lack it |
 | `error` (top level or in a choice) | Can come with HTTP 200: treat as a failure |
 
 ### 7.6 Errors
@@ -281,7 +287,7 @@ OpenRouter errors look like `{ "error": { "code": 429, "message": "…", "metada
 | 502 / 503 | Model or provider down | Yes | AI service failed. Try again. | `AI_FAILED` |
 | network error | Cannot connect | Yes | Cannot reach the AI service. | `AI_FAILED` |
 
-At most 2 retries per request. The daily-cap 429 is recognised from the error message (it names a per-day free limit). Confirm the exact wording on the first real hit and keep it in a unit test.
+At most 2 retries per request, and none that would end after the action's deadline (`AI_DEADLINE_MS`); past the deadline the answer is "AI service timed out. Try again." The daily-cap 429 is recognised from the error message (it names a per-day free limit). Confirm the exact wording on the first real hit and keep it in a unit test.
 
 ### 7.7 Other endpoints
 
@@ -290,13 +296,13 @@ At most 2 retries per request. The daily-cap 429 is recognised from the error me
 | `GET /models` (public, no key) | `ai:models` | Free models and abilities: `pricing.prompt` and `pricing.completion` are `"0"`; `architecture.input_modalities` contains `image`; `supported_parameters` contains `tools`, `structured_outputs`, `response_format`; `context_length` |
 | `GET /key` | `ai:models`, `ai:smoke` | Whether the key works and the account's free-tier status |
 
-`ai:models` prints a table of free models (id, context length, image input, tools, structured outputs), then for each configured model PASS / FAIL per feature it is used for.
+`ai:models` prints a table of free models (id, context length, image input, tools, structured outputs, reasoning), then PASS / FAIL for each configured model and each fallback, per feature it is used for (text fallbacks: tools; vision fallbacks: image input). Only ids that `config.ts` accepts as free are listed as usable; a zero-priced model without the `:free` suffix is listed apart as "needs `AI_ALLOW_PAID=true`". The list shows what a model claims, not that it works: `ai:smoke` and `ai:smoke -- --tools` prove it.
 
 ## 8. Test tools
 
 | Tool | What it does |
 |---|---|
-| `tests/mock-ai/server.mjs` | A small Node HTTP server that answers `POST /chat/completions` in the chat completions shape, for end-to-end runs with no key (`OPENROUTER_BASE_URL=http://127.0.0.1:4010`). Text: if the `<text>` equals a text fixture, returns that fixture's expected JSON. Photo: returns the first photo fixture. Ask: first a `search_contacts` call with the question as `text`, then `final_answer` with the first result id. Special inputs: `MOCK_INVALID_ONCE` (invalid JSON on the first try), `MOCK_STALL` (keeps searching, so the loop must force the final round), `MOCK_FENCED` (JSON inside code fences), `MOCK_429_DAY` (daily-cap error). Writes each request body to `requests.log` |
+| `tests/mock-ai/server.mjs` | A small Node HTTP server that answers `POST /chat/completions` in the chat completions shape, for trying the pages in a browser with no key (`OPENROUTER_BASE_URL=http://127.0.0.1:4010`); there is no automated end-to-end suite. Text: if the `<text>` equals a text fixture, returns that fixture's expected JSON; any other text returns an empty contact list. Photo: returns the first photo fixture. Ask: first a `search_contacts` call with the question as `text`, then `final_answer` with the first result id. Special inputs: `MOCK_INVALID_ONCE` (invalid JSON on the first try), `MOCK_STALL` (keeps searching, so the loop must force the final round), `MOCK_FENCED` (JSON inside code fences), `MOCK_429_DAY` (daily-cap error). Writes each request body to `tests/mock-ai/requests.log` (git-ignored; test data only) |
 | Unit tests | Mock `fetch`. No network, no database |
 | DB tests | `vitest` with a separate config; refuse to run unless `MONGODB_DB` contains `test` |
 | `scripts/eval-score.ts` | One comparison rule for all evals (`plan.md` §10) |
@@ -317,7 +323,9 @@ Index name `contacts_search` on the `contacts` collection.
           "type": "mapping",
           "mappings": {
             "أ": "ا", "إ": "ا", "آ": "ا", "ٱ": "ا", "ة": "ه", "ى": "ي", "ـ": "",
-            "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
+            "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
+            "ی": "ي", "ک": "ك",
+            "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4", "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9"
           }
         }
       ],
@@ -353,6 +361,7 @@ Index name `contacts_search` on the `contacts` collection.
 ```
 
 - The `fold` analyzer makes أحمد, احمد and أحْمد match, and Arabic-Indic digits equal Latin digits.
+- The last two mapping lines are the Persian / Kurdish yeh (U+06CC) and kaf (U+06A9), folded to the Arabic letters, and the Persian digits. The mapping must stay the same as `foldArabic` and `normalizeDigits` in `normalize.ts`.
 - The `ar` sub-field (`lucene.arabic`) adds Arabic stemming. Query it with `path: { value: "<field>", multi: "ar" }`.
 - `Sector` as `token` and `DepartmentId` as `objectId` allow exact `equals` filters; `CreatedAt` allows `range` filters.
 - The department scope goes in `compound.filter` as `{ equals: { path: "DepartmentId", value: <ObjectId> } }`, in both `$search` and `$searchMeta`.
