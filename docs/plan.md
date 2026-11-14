@@ -186,7 +186,7 @@ src/
       structure-text.ts              → structureText(departmentId, text)
       extract-photo.ts               → extractPhoto(departmentId, file)
       prepare-image.ts               → prepareImage(buffer) → base64 JPEG
-      prompts/                       → structure-text.v1.ts, extract-photo.v1.ts, sector-rules.v1.ts
+      prompts/                       → structure-text.v1.ts, extract-photo.v1.ts, extract-photo.v2.ts (in use), sector-rules.v1.ts
 
     search/
       ask.ts                         → ask(scope, question)
@@ -541,7 +541,7 @@ Tools are defined in `tools.md` §6.
 
 ## 9. Prompts
 
-Each prompt file exports `{ id, text }`. The texts below are version 1. Do not change wording without making a new version file and re-running the eval.
+Each prompt file exports `{ id, text }`. The texts below are the versions in use (version 1, except `extract-photo`, which is version 2). Do not change wording without making a new version file and re-running the eval.
 
 ### 9.1 `sector-rules.v1` (inserted into the three prompts where `{SECTOR_RULES}` appears)
 
@@ -580,7 +580,9 @@ Rules:
 - If the text contains no contact information at all, return an empty list.
 ```
 
-### 9.3 `extract-photo.v1`
+### 9.3 `extract-photo.v2`
+
+Version 2 (14 Nov 2026) is in use. It differs from version 1 in one line, the City rule. Version 1 read: `- City: only a city printed as a location (address line, "Baghdad", "Erbil, Iraq"). Never take it from a company or organization name ("Basra Oil Company" does not mean City is Basra).` The model then copied the country or district into City (`Baghdad, Iraq`), which cost about half of all misses. `extract-photo.v1.ts` is kept in the repository for comparison.
 
 ```
 You read a photo of business cards for a university office in Iraq. The photo may contain one card or many (up to about 15), laid out on a table, possibly rotated, angled, overlapping slightly, or under uneven light. Cards may be Arabic, English, or bilingual (Arabic on one half, English on the other).
@@ -593,7 +595,7 @@ Each contact has exactly these 8 fields:
 - Position: job title as printed; bilingual as "Arabic / English".
 - Mobile: mobile number(s) as printed (Iraqi mobiles start with 07 or +9647). Several: separate with ", ".
 - Company: the organization as printed; bilingual as "Arabic / English". If the only organization name is in the logo, use the logo text.
-- City: only a city printed as a location (address line, "Baghdad", "Erbil, Iraq"). Never take it from a company or organization name ("Basra Oil Company" does not mean City is Basra).
+- City: the city name only, taken from a location printed on the card (address line). Write the city alone, without country, district or street: "Baghdad, Iraq" → "Baghdad"; "الجادرية - بغداد" → "بغداد". A printed district or street goes to Notes as "Address: …". Never take the city from a company or organization name ("Basra Oil Company" does not mean City is Basra).
 - Email: email address(es) as printed. Several: separate with ", ".
 - {SECTOR_RULES}
 - Notes: everything else useful on the card, each item labelled and separated by "; ": office/landline numbers, fax, extension, website, street address, P.O. box, social handles (e.g. "Office: +964 1 717 0000; Website: example.com").
@@ -777,6 +779,6 @@ Fixtures are written as part of the build (formats and examples in `tools.md` §
 | 2 — AI module | Done (14 Nov 2026) | 57 unit tests with mocked `fetch`. On the real API: `ai:models` lists 14 free models; `ai:smoke` and `ai:smoke -- --tools` pass on `particle-ai/particle-1:free`, `nvidia/nemotron-3.5-super-vl:free` and `inclusionai/ling-3.2-flash:free` in `schema` mode. Confirmed live: `model` + `models` together work (a fallback answered 1 of 51 Ask requests), `response_format` json_schema + the `response-healing` plugin are accepted. **Not confirmed:** the wording of the daily-cap 429 (never hit; `isDailyLimit` in `client.ts` still guesses it). The attribution header sent is `X-OpenRouter-Title`. `provider.require_parameters` is sent only with `tools` or `response_format`. |
 | 3 — Add from Text | Done (14 Nov 2026) | `eval:text`, `particle-ai/particle-1:free`, `schema` mode, all 10 fixtures (20 contacts): **key fields 100%**, all fields 98.8% (2 Notes misses), 10 requests, 0 retries. DB tests prove duplicates, the invalid-email block, the daily-cap message with manual add, and the per-user limit. Page checked in a browser against the mock AI. |
 | 4 — Model selection | Done (14 Nov 2026) — **owner approves the choice** | Candidates (all pass `ai:smoke` and `ai:smoke -- --tools`, `schema` mode), `eval:text -- --limit 3`: `particle-ai/particle-1:free` key 100% / all 100%, ~1–2 s per call; `nvidia/nemotron-3.5-super-vl:free` key 100% / all 95%, ~8 s; `inclusionai/ling-3.2-flash:free` key 80% (1 of 3 timed out), ~12 s. **Chosen:** `AI_MODEL_TEXT=particle-ai/particle-1:free`, `AI_JSON_MODE=schema`, `AI_FALLBACK_MODELS_TEXT=nvidia/nemotron-3.5-super-vl:free,inclusionai/ling-3.2-flash:free`. Full `eval:text`: key 100%, all 98.8% (target ≥ 95%: met). All free models list `reasoning` today, so none without it could be preferred. |
-| 5 — Add from Photo | Code done; **field target MISSED — waiting for the owner's decision** | `eval:photo`, 10 synthetic photos (55 cards), `schema` mode. `particle-ai/particle-1:free` with `AI_MAX_TOKENS=32000`: **card count right 10/10** (1, 4, 8 and 12 cards all right), **all fields 85.9%** (target ≥ 90%: missed), 62 misses. About half are City written with the country or district as printed (`Baghdad, Iraq`, `الجادرية - بغداد`) where the fixtures expect the city alone; the rest are real misreads: digits in mobiles (mostly on Arabic cards with Arabic-Indic digits), a letter in an email or name, an address put in Notes. With the default `AI_MAX_TOKENS=8000` the same model was cut off on 1–3 photos per run (`length`: it thinks before answering), so photos need a higher limit. `nvidia/nemotron-3.5-super-vl:free` (32000): count 9/10, all fields 72.0%, one timeout. **Chosen so far:** `AI_MODEL_VISION=particle-ai/particle-1:free`, `AI_MAX_TOKENS=32000`. Options for the owner (§9.5, §12): a prompt v2 ("City: the city name only", "read digits one by one") and re-run; accept and show a "check every number" note on the page; or the per-card upgrade. Not run: the 3 real phone photos, an 8 MB iPhone HEIC, the Vercel upload-limit check. |
+| 5 — Add from Photo | Synthetic target met (14 Nov 2026); **real phone photos, HEIC and Vercel checks waiting for the owner** | `eval:photo`, 10 synthetic photos (55 cards), `particle-ai/particle-1:free`, `schema` mode, `AI_MAX_TOKENS=32000`. **`extract-photo.v2` (in use): card count 10/10, all fields 95.5%** (target ≥ 9/10 and ≥ 90%: met), key fields 93.6%, 20 misses, 10 requests, 0 retries. Per field: FullName 96.4%, Position 98.2%, Mobile 87.3%, Company 98.2%, City 100%, Email 92.7%, Sector 100%, Notes 90.9%. The remaining misses are real misreads: one or two digits of a mobile (mostly Arabic-Indic digits on Arabic cards) and a letter in an email, so staff must check numbers on the review screen. History: `extract-photo.v1` scored 10/10 and 85.9% (62 misses, about half of them City written with the country or district); the owner chose a prompt v2 with one change, the City rule. With the default `AI_MAX_TOKENS=8000` the model was cut off on 1–3 photos per run (`length`), so photos need the higher limit. `nvidia/nemotron-3.5-super-vl:free` (v1, 32000): 9/10 and 72.0%. A possible v3 (§9.5): "read digits one at a time". Not run: the 3 real phone photos (§10: the target does not fully count without them), an 8 MB iPhone HEIC, the Vercel upload-limit check. |
 | 6 — Explore | Done (14 Nov 2026) | `eval:search`, `particle-ai/particle-1:free`, `schema` mode: **Ask 20/20 in the top 3** within 3 rounds (target ≥ 90%: met), 51 requests, 0 retries, 0 failures. **Quick search 12/12**, slowest median 59 ms (Atlas Local). With 12,033 contacts (Atlas Local): table pages 14–24 ms, filters 3 ms, quick search 14–63 ms. DB test: Ask as department A never returns a contact of B. Explore page checked in a browser, including phone width. Still to repeat on the real Atlas M0 cluster. |
 | 7 — Import, admin, PWA, polish | Code done (13 Nov 2026); **deploy and phone install waiting for the owner** | CSV import: clean report on the sample file (7 imported, 1 empty row and 1 duplicate skipped, 0 failed). Admin pages, My account, Team (placeholder names), manifest, icons (placeholder), service worker and offline page, README. `npm run check` green (137 unit tests); `npm run test:db` green (49 tests). Not done: Vercel deploy, install on a phone, owner's logo / colours / Team names, the 12,000-contact check on the real Atlas M0 cluster. |

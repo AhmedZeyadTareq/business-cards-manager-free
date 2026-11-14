@@ -11,7 +11,7 @@ import { findDuplicates } from "@/modules/contacts/contacts.repo";
 import { cleanForReview } from "@/modules/contacts/normalize";
 import { AppError } from "@/modules/shared/errors";
 import { prepareImage } from "./prepare-image";
-import { extractPhotoV1 } from "./prompts/extract-photo.v1";
+import { extractPhotoV2 } from "./prompts/extract-photo.v2";
 
 const PhotoResult = z.object({
   cardCount: z.number().int().min(0).max(50),
@@ -23,7 +23,7 @@ export async function extractContactsFromPhoto(
   image: JsonImage,
 ): Promise<{ cardCount: number; contacts: ContactInput[] }> {
   const result = await callJson({
-    prompt: extractPhotoV1,
+    prompt: extractPhotoV2,
     input: "Extract every business card in this photo.",
     schema: PhotoResult,
     image,

@@ -7,6 +7,7 @@ import {
   prepareImage,
 } from "@/modules/extraction/prepare-image";
 import { extractPhotoV1 } from "@/modules/extraction/prompts/extract-photo.v1";
+import { extractPhotoV2 } from "@/modules/extraction/prompts/extract-photo.v2";
 import { sectorRulesV1 } from "@/modules/extraction/prompts/sector-rules.v1";
 import { structureTextV1 } from "@/modules/extraction/prompts/structure-text.v1";
 import { searchV1 } from "@/modules/search/prompts/search.v1";
@@ -16,8 +17,10 @@ describe("prompts", () => {
   it("are versioned and carry the sector rules", () => {
     expect(structureTextV1.id).toBe("structure-text.v1");
     expect(extractPhotoV1.id).toBe("extract-photo.v1");
+    expect(extractPhotoV2.id).toBe("extract-photo.v2");
+    expect(extractPhotoV2.text).not.toBe(extractPhotoV1.text);
     expect(searchV1.id).toBe("search.v1");
-    for (const prompt of [structureTextV1, extractPhotoV1, searchV1]) {
+    for (const prompt of [structureTextV1, extractPhotoV1, extractPhotoV2, searchV1]) {
       expect(prompt.text).not.toContain("{SECTOR_RULES}");
       expect(prompt.text).toContain(sectorRulesV1.text);
     }
@@ -27,7 +30,8 @@ describe("prompts", () => {
   it("match the wording in plan.md §9", () => {
     const plan = readFileSync("docs/plan.md", "utf8");
     expect(plan).toContain(sectorRulesV1.text);
-    for (const prompt of [structureTextV1, extractPhotoV1, searchV1]) {
+    // plan.md holds the versions in use: extract-photo is at version 2.
+    for (const prompt of [structureTextV1, extractPhotoV2, searchV1]) {
       const [before, after] = prompt.text.split(sectorRulesV1.text);
       expect(plan).toContain(before);
       expect(plan).toContain(after);
