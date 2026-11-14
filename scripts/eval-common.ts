@@ -7,7 +7,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
   const limitAt = argv.indexOf("--limit");
   const limit = limitAt >= 0 ? Number(argv[limitAt + 1]) : undefined;
   const flags = new Set(argv.filter((arg) => arg.startsWith("--")));
-  const name = argv.find((arg, index) => !arg.startsWith("--") && index !== limitAt + 1);
+  const name = argv.find(
+    (arg, index) => !arg.startsWith("--") && !(limitAt >= 0 && index === limitAt + 1),
+  );
   return { limit: Number.isFinite(limit) ? limit : undefined, name, flags };
 }
 
