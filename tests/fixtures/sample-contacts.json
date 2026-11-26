@@ -1,0 +1,302 @@
+[
+  {
+    "FullName": "Mohammed Al-Saadi",
+    "Position": "Marketing Manager",
+    "Mobile": "0770 123 4567",
+    "Company": "Asiacell",
+    "City": "Baghdad",
+    "Email": "saadi@asiacell-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 717 0000; Website: www.asiacell-test.com"
+  },
+  {
+    "FullName": "أحمد الربيعي",
+    "Position": "مدير عام دائرة البعثات",
+    "Mobile": "٠٧٨٠١١١٢٢٣٣",
+    "Company": "وزارة التعليم العالي والبحث العلمي",
+    "City": "بغداد",
+    "Email": "a.alrubaie@mohesr-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": ""
+  },
+  {
+    "FullName": "زينب كاظم",
+    "Position": "طبيبة أطفال / Doctor (Pediatrics)",
+    "Mobile": "0781 555 0142",
+    "Company": "مستشفى الكوفة الأهلي / Al-Kufa Private Hospital",
+    "City": "Najaf",
+    "Email": "dr.zainab@alkufa-hospital-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Clinic hours: 4-8 pm"
+  },
+  {
+    "FullName": "Sara Al-Jubouri",
+    "Position": "Branch Manager",
+    "Mobile": "+964 771 555 0199",
+    "Company": "Trade Bank of Iraq",
+    "City": "Baghdad",
+    "Email": "sara.aljubouri@tbi-test.iq",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 543 2100"
+  },
+  {
+    "FullName": "علي حسين الخفاجي",
+    "Position": "مدير فرع",
+    "Mobile": "٠٧٧٠٢٣٤٥٦٧٨",
+    "Company": "مصرف الرافدين",
+    "City": "البصرة",
+    "Email": "",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "فرع العشار"
+  },
+  {
+    "FullName": "Omar Al-Dulaimi",
+    "Position": "Operations Engineer",
+    "Mobile": "07841239900",
+    "Company": "Basra Oil Company",
+    "City": "Basra",
+    "Email": "omar.dulaimi@boc-test.oil.iq",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": ""
+  },
+  {
+    "FullName": "نور الهاشمي / Noor Al-Hashimi",
+    "Position": "مديرة العلاقات العامة / Public Relations Manager",
+    "Mobile": "00964 750 332 1100",
+    "Company": "فندق بابل / Babylon Hotel",
+    "City": "Baghdad",
+    "Email": "noor@babylonhotel-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 778 1964; Website: www.babylonhotel-test.com"
+  },
+  {
+    "FullName": "Karwan Aziz",
+    "Position": "Sales Director",
+    "Mobile": "+9647504417788",
+    "Company": "Zagros Construction Co.",
+    "City": "Erbil",
+    "Email": "karwan.aziz@zagros-construction-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": ""
+  },
+  {
+    "FullName": "Dilshad Omer",
+    "Position": "IT Manager",
+    "Mobile": "0751-155-2030",
+    "Company": "Kurdistan International Bank",
+    "City": "Sulaymaniyah",
+    "Email": "dilshad.omer@kib-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 53 319 0000"
+  },
+  {
+    "FullName": "Hassan Al-Tamimi",
+    "Position": "Director of Planning",
+    "Mobile": "07901 234 567",
+    "Company": "Ministry of Planning",
+    "City": "Baghdad",
+    "Email": "h.altamimi@mop-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": ""
+  },
+  {
+    "FullName": "فاطمة العبيدي",
+    "Position": "مستشارة قانونية",
+    "Mobile": "٠٧٧١ ٢٣٤ ٥٦٧٨",
+    "Company": "وزارة النفط",
+    "City": "بغداد",
+    "Email": "fatima.alobaidi@oil-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": ""
+  },
+  {
+    "FullName": "يوسف الشمري / Yousif Al-Shammari",
+    "Position": "معاون المحافظ / Deputy Governor",
+    "Mobile": "0782 100 4455, 0772 100 4455",
+    "Company": "محافظة كربلاء / Karbala Governorate",
+    "City": "Karbala",
+    "Email": "y.alshammari@karbala-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": "Office: 032 331 0020"
+  },
+  {
+    "FullName": "Layla Mahmoud",
+    "Position": "Protocol Officer",
+    "Mobile": "+964 (0) 790 555 6677",
+    "Company": "Ministry of Foreign Affairs",
+    "City": "Baghdad",
+    "Email": "layla.mahmoud@mofa-test.gov.iq",
+    "Sector": "Ministries & Government",
+    "Notes": ""
+  },
+  {
+    "FullName": "Anna Schmidt",
+    "Position": "Cultural Attaché",
+    "Mobile": "+964 783 222 1144, +49 151 2345 6789",
+    "Company": "Embassy of Germany",
+    "City": "Baghdad",
+    "Email": "anna.schmidt@german-embassy-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": "Scholarships and academic exchange"
+  },
+  {
+    "FullName": "Kenji Tanaka",
+    "Position": "First Secretary",
+    "Mobile": "07712223344",
+    "Company": "Embassy of Japan",
+    "City": "Baghdad",
+    "Email": "kenji.tanaka@japan-embassy-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "Rana Khalil",
+    "Position": "Education Officer",
+    "Mobile": "964 750 888 1212",
+    "Company": "UNICEF Iraq",
+    "City": "Erbil",
+    "Email": "rkhalil@unicef-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "مريم يعقوب",
+    "Position": "مسؤولة برامج",
+    "Mobile": "٠٧٨٣٣٤٥٦٧٨٩",
+    "Company": "برنامج الأمم المتحدة الإنمائي / UNDP",
+    "City": "بغداد",
+    "Email": "mariam.yaqoub@undp-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "Pierre Laurent",
+    "Position": "Consul",
+    "Mobile": "+964 751 444 9090",
+    "Company": "Consulate General of France",
+    "City": "Erbil",
+    "Email": "pierre.laurent@france-consulate-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "خالد العزاوي",
+    "Position": "عميد كلية الهندسة",
+    "Mobile": "07835556677",
+    "Company": "جامعة بغداد",
+    "City": "بغداد",
+    "Email": "khalid.alazzawi@uobaghdad-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": "Office: 01 778 5500"
+  },
+  {
+    "FullName": "Shirin Jalal",
+    "Position": "Head of Computer Science Department",
+    "Mobile": "0772 876 5432",
+    "Company": "University of Sulaimani",
+    "City": "Sulaymaniyah",
+    "Email": "shirin.jalal@univsul-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": ""
+  },
+  {
+    "FullName": "سعد النعيمي / Saad Al-Nuaimi",
+    "Position": "أستاذ مساعد / Assistant Professor",
+    "Mobile": "07519876543",
+    "Company": "جامعة الموصل / University of Mosul",
+    "City": "Mosul",
+    "Email": "saad.alnuaimi@uomosul-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": ""
+  },
+  {
+    "FullName": "Reem Al-Ani",
+    "Position": "International Relations Coordinator",
+    "Mobile": "+964-780-345-6789",
+    "Company": "University of Basrah",
+    "City": "Basra",
+    "Email": "reem.alani@uobasrah-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": ""
+  },
+  {
+    "FullName": "عبد الله الجنابي",
+    "Position": "مدير مركز التعليم المستمر",
+    "Mobile": "07822223344",
+    "Company": "جامعة الكوفة",
+    "City": "النجف",
+    "Email": "abdullah.aljanabi@uokufa-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": ""
+  },
+  {
+    "FullName": "Hadeel Yousif",
+    "Position": "Program Manager",
+    "Mobile": "0790 333 4455",
+    "Company": "Iraqi Red Crescent Society",
+    "City": "Baghdad",
+    "Email": "hadeel.yousif@ircs-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  },
+  {
+    "FullName": "كرار الموسوي",
+    "Position": "منسق مشاريع",
+    "Mobile": "٠٧٨١٢٣٤٥٦٧٨",
+    "Company": "مؤسسة الغدير للرعاية الاجتماعية",
+    "City": "كربلاء",
+    "Email": "",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  },
+  {
+    "FullName": "Soran Rasul",
+    "Position": "Country Director",
+    "Mobile": "+9647507771234",
+    "Company": "Hiwa Development Foundation",
+    "City": "Erbil",
+    "Email": "soran@hiwa-foundation-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": "Website: www.hiwa-foundation-test.org"
+  },
+  {
+    "FullName": "إيمان الزبيدي / Eman Al-Zubaidi",
+    "Position": "رئيسة الجمعية / President",
+    "Mobile": "0773 456 7890",
+    "Company": "جمعية الأمل للمرأة / Al-Amal Women's Association",
+    "City": "Baghdad",
+    "Email": "eman@alamal-women-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  },
+  {
+    "FullName": "Bashar Al-Rawi",
+    "Position": "Lawyer",
+    "Mobile": "07901112233",
+    "Company": "Al-Rawi Law Office",
+    "City": "Baghdad",
+    "Email": "bashar@alrawi-law-test.com",
+    "Sector": "Professional & Other Contacts",
+    "Notes": "Contracts and university agreements"
+  },
+  {
+    "FullName": "حيدر الأسدي",
+    "Position": "مهندس استشاري",
+    "Mobile": "٠٧٧٢ ٣٤٥ ٦٧٨٩",
+    "Company": "مكتب الأسدي للاستشارات الهندسية",
+    "City": "البصرة",
+    "Email": "haider@alasadi-eng-test.com",
+    "Sector": "Professional & Other Contacts",
+    "Notes": ""
+  },
+  {
+    "FullName": "Tara Najib",
+    "Position": "Freelance Translator",
+    "Mobile": "0750 246 8135",
+    "Company": "",
+    "City": "Sulaymaniyah",
+    "Email": "tara.najib@mail-test.com",
+    "Sector": "Professional & Other Contacts",
+    "Notes": "Kurdish, Arabic and English"
+  }
+]

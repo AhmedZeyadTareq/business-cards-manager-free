@@ -1,0 +1,5 @@
+Name;Title;Organization;Phone;Email;City
+Hussein Al-Garawi;Procurement Manager;South Gas Company;07705512340;h.algarawi@southgas-test.com;Basra
+Maha Sabah;Head of Scholarships;Ministry of Education;0782 660 1175;;Baghdad
+وسام الحلفي;مدير العلاقات العامة;غرفة تجارة البصرة;07711903344;wisam@basrachamber-test.org;البصرة
+Jwan Bakir;Project Officer;Norwegian Refugee Council;+9647504129988;jwan.bakir@nrc-test.org;Duhok

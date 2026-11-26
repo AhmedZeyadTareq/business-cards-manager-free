@@ -1,0 +1,42 @@
+[
+  {
+    "FullName": "Hussein Al-Garawi",
+    "Position": "Procurement Manager",
+    "Mobile": "+9647705512340",
+    "Company": "South Gas Company",
+    "City": "Basra",
+    "Email": "h.algarawi@southgas-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": ""
+  },
+  {
+    "FullName": "Maha Sabah",
+    "Position": "Head of Scholarships",
+    "Mobile": "+9647826601175",
+    "Company": "Ministry of Education",
+    "City": "Baghdad",
+    "Email": "",
+    "Sector": "Ministries & Government",
+    "Notes": ""
+  },
+  {
+    "FullName": "وسام الحلفي",
+    "Position": "مدير العلاقات العامة",
+    "Mobile": "+9647711903344",
+    "Company": "غرفة تجارة البصرة",
+    "City": "البصرة",
+    "Email": "wisam@basrachamber-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  },
+  {
+    "FullName": "Jwan Bakir",
+    "Position": "Project Officer",
+    "Mobile": "+9647504129988",
+    "Company": "Norwegian Refugee Council",
+    "City": "Duhok",
+    "Email": "jwan.bakir@nrc-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  }
+]

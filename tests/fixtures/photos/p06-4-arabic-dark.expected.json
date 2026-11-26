@@ -1,0 +1,42 @@
+[
+  {
+    "FullName": "كرار الموسوي",
+    "Position": "منسق مشاريع",
+    "Mobile": "+9647812345678",
+    "Company": "مؤسسة الغدير للرعاية الاجتماعية",
+    "City": "كربلاء",
+    "Email": "karrar@alghadeer-test.org",
+    "Sector": "NGOs & Civil Society",
+    "Notes": ""
+  },
+  {
+    "FullName": "حيدر الأسدي",
+    "Position": "مهندس استشاري",
+    "Mobile": "+9647723456789",
+    "Company": "مكتب الأسدي للاستشارات الهندسية",
+    "City": "البصرة",
+    "Email": "haider@alasadi-eng-test.com",
+    "Sector": "Professional & Other Contacts",
+    "Notes": ""
+  },
+  {
+    "FullName": "عبد الله الجنابي",
+    "Position": "مدير مركز التعليم المستمر",
+    "Mobile": "+9647822223344",
+    "Company": "جامعة الكوفة",
+    "City": "النجف",
+    "Email": "abdullah.aljanabi@uokufa-test.edu.iq",
+    "Sector": "Universities & Education",
+    "Notes": "Website: www.uokufa-test.edu.iq"
+  },
+  {
+    "FullName": "رغد سلمان الطائي",
+    "Position": "مديرة الموارد البشرية",
+    "Mobile": "+9647702233441",
+    "Company": "شركة نفط الشمال",
+    "City": "كركوك",
+    "Email": "raghad.altaie@noc-test.oil.iq",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: 050 225 1100; Fax: 050 225 1101"
+  }
+]

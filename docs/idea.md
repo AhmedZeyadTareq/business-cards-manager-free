@@ -45,7 +45,7 @@ Every contact has the same 8 fields: `FullName`, `Position`, `Mobile`, `Company`
 | Risk | Why it matters | What the plan does about it |
 |---|---|---|
 | **Privacy** | Free endpoints may log prompts or use them for training. Business cards hold other people's names, phones and emails. | **Test data only** until the owner decides. An env setting can restrict requests to providers that do not collect data, but many free endpoints then disappear. |
-| **Daily cap** | Free models allow about 20 requests a minute and 50 a day; 1,000 a day once the account has bought $10 of credits (one time). Ask AI uses up to 3 requests per question. | A clear "today's free AI allowance is used up" message. Everything that needs no AI keeps working, including manual add. |
+| **Daily cap** | Free models allow about 20 requests a minute and 50 a day; 1,000 a day once the account has bought $10 of credits (one time). Ask AI uses up to 3 requests per question. | A per-person daily limit, so one person cannot use it all. A clear "today's free AI allowance is used up" message. Everything that needs no AI keeps working, including manual add. |
 | **Accuracy** | Free models are small. Photos with many cards and Arabic text are the hard cases. | The model is chosen by measured accuracy (evals), not by name. If a target is missed, it is reported and the owner decides. |
 | **Models disappear** | Free model ids are added and removed often. | Model ids live in env only. A script lists the free models that have the needed abilities today. |
 | **Uneven features** | Not every free model supports images, tool calling or JSON schema output. | A script checks the chosen models. JSON output has a fallback mode. |
@@ -68,7 +68,7 @@ OpenRouter's limits and free model list change. Check <https://openrouter.ai/doc
 | May real contacts be sent to free endpoints? | Yes / no / only to providers that do not collect data | **No**: test data only |
 | Buy $10 of OpenRouter credits once to raise the daily cap to 1,000? | Yes / no | No (50 a day) |
 | Database | MongoDB Atlas free tier in the cloud / Atlas Local in Docker | Atlas free tier |
-| Hosting | One local computer / Vercel | Local first |
+| Hosting | Decided: **Vercel** | Production runs on Vercel. A local clone is only for testing before a deploy |
 | Branding | Organization name, logo, colours, the people on the Team page | App name "Business Cards Manager", crimson theme, placeholder logo |
 
 ## 8. Not in this version

@@ -1,0 +1,11 @@
+.next
+node_modules
+package-lock.json
+next-env.d.ts
+eval-results
+import-reports
+tests/fixtures
+public
+docs
+CLAUDE.md
+AGENTS.md

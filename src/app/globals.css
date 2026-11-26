@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #ac103d;
+  --primary-dark: #870c30;
+  --grey: #808285;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-grey: var(--grey);
+  --font-sans: var(--font-plex), var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: #ffffff;
+  color: #1f2023;
+}
+
+/* Native dialogs: the app's modal layer. */
+dialog {
+  margin: auto;
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* The contact list changes layout by the width of its own space, not the window. */
+.contact-list {
+  container-type: inline-size;
+  container-name: list;
+}

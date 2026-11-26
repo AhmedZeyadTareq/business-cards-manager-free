@@ -1,0 +1,42 @@
+[
+  {
+    "FullName": "Sara Al-Jubouri",
+    "Position": "Branch Manager",
+    "Mobile": "+9647715550199",
+    "Company": "Trade Bank of Iraq",
+    "City": "Baghdad",
+    "Email": "sara.aljubouri@tbi-test.iq",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Office: +964 1 543 2100; Address: Al-Mansour"
+  },
+  {
+    "FullName": "Karwan Aziz",
+    "Position": "Sales Director",
+    "Mobile": "+9647504417788",
+    "Company": "Zagros Construction Co.",
+    "City": "Erbil",
+    "Email": "karwan.aziz@zagros-test.com",
+    "Sector": "Businesses & Financial Institutions",
+    "Notes": "Website: www.zagros-test.com"
+  },
+  {
+    "FullName": "Anna Schmidt",
+    "Position": "Cultural Attaché",
+    "Mobile": "+9647832221144",
+    "Company": "Embassy of Germany",
+    "City": "Baghdad",
+    "Email": "anna.schmidt@german-embassy-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": ""
+  },
+  {
+    "FullName": "Rana Khalil",
+    "Position": "Education Officer",
+    "Mobile": "+9647508881212",
+    "Company": "UNICEF Iraq",
+    "City": "Erbil",
+    "Email": "rkhalil@unicef-test.org",
+    "Sector": "Embassies & International Organizations",
+    "Notes": "Office: +964 66 255 4400"
+  }
+]
